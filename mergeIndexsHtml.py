@@ -129,6 +129,21 @@ for indexI in indexNames:
 
 tagStrs.sort(key=tagStrsKeyForSort, reverse=True)
 
+## 0 1 整理
+row0 = 'tr class="row0"'
+row1 = 'tr class="row1"'
+rowI = 'tr class="row'
+for i in range(len(tagStrs)):
+    numSuffix = i & 1
+    print '=================='
+    strI = tagStrs[i]
+    print strI.find(row0)
+    print strI.find(row1)
+    strI = strI.replace(row0, rowI + str(numSuffix)+'"')
+    strI = strI.replace(row1, rowI + str(numSuffix)+'"')
+    tagStrs[i] = strI
+    print tagStrs[i]
+
 writeToHtml(tagStrs)
 
 print "done"
