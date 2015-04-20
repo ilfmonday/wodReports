@@ -1,0 +1,808 @@
+<html>
+<head>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type"/>
+<meta content="cn" http-equiv="Content-Language"/>
+<link href="http://info.world-of-dungeons.org/wod/css/WOD.gif" rel="SHORTCUT ICON" type="image/gif"/>
+<title>20150330_c_mini_woodlander_archer</title>
+<link href="http://canto.world-of-dungeons.org/wod/css/layout.css?1426443226" rel="stylesheet" type="text/css"/>
+<link href="http://canto.world-of-dungeons.org/wod/css//skins/skin-3/skin-cn.css?1426443226" rel="stylesheet" type="text/css"/>
+<script src="http://canto.world-of-dungeons.org/wod/javascript/wod_standard.js?1426443226" type="text/javascript"></script>
+<script src="http://canto.world-of-dungeons.org/wod/javascript/wodtooltip.js?1426443226" type="text/javascript"></script>
+<style type="text/css">
+/*<![CDATA[*/
+      .tableMinWidthRespectingContent {
+        width:1px;
+        }
+        .tableMinHeightRespectingContent {
+        height:1px;
+        }
+/*]]>*/
+    </style>
+<script type="text/javascript">window.onload = function(e){wodToolTipInit();wodInitialize('canto.world-of-dungeons.org','','/wod/spiel/','/wod/ajax/','WOD','cn','/wod/css//skins/skin-3/','/wod/css/','1','1');}
+function o(t,n){ 
+ var url="http://canto.world-of-dungeons.org/wod/spiel/";
+if(t=="n"){url += "help/npc"}
+if(t=="s"){url += "hero/skill"}
+if(t=="i"){url += "hero/item"}
+return wo(url + ".php?name=" + n + "&IS_POPUP=1");}
+var CTable=function(){};
+CTable.GetNumber = function (cell) {
+		var numberPatten = /^\s?([\d]+\.?[\d]*)\s?_?\s?([\d]*\.?[\d]*)\s?$/;
+		var pairTable = cell.firstChild;
+		var numberString = cell.textContent;
+		var numbers;
+		if(pairTable && pairTable.nodeName == "TABLE")
+		{
+			numberString = pairTable.id;
+		}
+		if(numberPatten.test(numberString))
+		{
+			numbers = [];
+			var numberres = numberPatten.exec(numberString);
+			if(numberres[1])
+				numbers.push(numberres[1]);
+			if(numberres[2])
+				numbers.push(numberres[2]);
+		}
+		return numbers;
+	}
+CompareString = function CompareString(a, b) {
+        a = a || "";
+        b = b || "";
+        return a.toLowerCase().localeCompare(b.toLowerCase(),"zh-CN-u-co-pinyin");
+    }
+ct = function (Id) {
+        try {
+            var Table = document.getElementById(Id);
+            if (Table.hasAttribute("hide")) {
+                Table.removeAttribute("hide");
+            } else {
+                Table.setAttribute("hide", "hide");
+            }
+        } catch (e) {
+            alert("CTable.OnClickTitle(): " + e);
+        }
+    }
+cf = function (tableId,filterRowId) {
+		try {
+            var Table = document.getElementById(tableId);
+			var filterRow = document.getElementById(filterRowId);
+			var stringfilters = [];
+			var orgstringfilters = [];
+			var numberfilters = [];
+			var filterString = "";
+			var showIds = [];
+			var refilter = 0;
+			
+			var showHero_0 = document.getElementById(tableId + "_checkbox_0_0");
+			var showHero_1 = document.getElementById(tableId + "_checkbox_0_1");
+			var showHero = [showHero_0.checked,showHero_1.checked];
+			
+			for(var i = 0; i< filterRow.cells.length; i++)
+			{
+				var cell = filterRow.cells[i];
+				var stringfilter = document.getElementById(filterRow.id + "_combobox_" + i);
+				var orgstringfilter = document.getElementById('org_' + filterRow.id + "_combobox_" + i);
+				var numberfilter = document.getElementById(filterRow.id + "_textbox_" + i);
+				if(stringfilter){
+					stringfilters.push(stringfilter.value);
+					refilter += stringfilter.selectedIndex > 0?1:0;
+				}
+				else
+					stringfilters.push(null);
+				if(orgstringfilter){
+					for(var ii = 0, ij = orgstringfilter.options.length; ii < ij; ++ii) {
+						if(orgstringfilter.options[ii].value === stringfilter.value) {
+						   orgstringfilter.selectedIndex = ii;
+						   break;
+						}
+					}
+					orgstringfilters.push([stringfilter,orgstringfilter]);
+					showIds.push([]);
+				}
+				if(numberfilter)
+					numberfilters.push(numberfilter.value);
+				else
+					numberfilters.push(null);
+			}
+			var index = 0;
+			var patten = /([\(|\[|>|<|=|]*)\s*([\d]*\.?[\d]*)\s*-?\s*([\d]*\.?[\d]*)\s*([\)|\]|\s]?)/;
+			for(var i = 2;i< Table.rows.length;i=i+2)
+			{
+				var row = Table.rows[i];
+				var rowInfo = Table.rows[i+1];
+				var rowIds = row.id.split(",");
+				var show = true;
+				
+				var hero = row.cells[0].getElementsByTagName('a')[0];
+				var heroKind = hero.getAttribute("kind");
+				show = showHero[heroKind];
+				if(show)
+				{
+					for(var fi =0; fi<stringfilters.length;fi++)
+					{
+						var sfilter = stringfilters[fi];
+						if(!sfilter)
+							continue;
+						if(sfilter != fi + "_all" && sfilter != rowIds[fi])
+						{
+							show = false;
+							break;
+						}
+					}
+				}
+				if(show)
+				{
+					for(fi=0;fi<numberfilters.length;fi++)
+					{
+						var nfilter = numberfilters[fi];
+						
+						if(!nfilter)
+							continue;
+						else 
+						{
+							var numbers = CTable.GetNumber(row.cells[fi]);
+							var nfilters = nfilter.split(/\s*[,|，]\s*/);
+							for(ni = 0; ni < numbers.length; ni++)
+							{
+								var theFilter = nfilters[ni];
+								var testString = "";
+								if(theFilter && patten.test(theFilter))
+								{
+									var	op = "==";
+									var res = patten.exec(theFilter);
+									if(res[1])
+									{
+										op = res[1];
+										if(res[3])
+										if( op == "[") op = ">=";
+										if( op == "(") op = ">";
+										if( op == "=") op = "==";
+									}
+									else
+									{
+										if(res[3])
+											op = ">=";
+									}
+									testString = numbers[ni] + op + res[2];
+									if(res[3])
+									{
+										op = "<=";
+										if(res[4])
+										{
+											op = res[4]
+											if( op == "]") op = "<=";
+											if( op == ")") op = "<";
+										}
+										testString += " && " + numbers[ni] + op + res[3];
+									}
+									show = eval(testString);
+									if(!show)
+										break;
+								}
+							}
+						}
+						if(!show)
+							break;
+					}
+				}
+				row.style.display = show? '':'none';
+				rowInfo.style.display = show? rowInfo.style.display:'none';
+				if(show)
+				{
+					row.className = "row" + index % 2;
+					rowInfo.className = row.className;
+					index++;
+					for(var fi =0; fi<orgstringfilters.length;fi++)
+					{
+						var id = rowIds[fi];
+						if(showIds[fi].indexOf(id) <= -1)
+							showIds[fi].push(id);
+					}
+				}
+			}
+			
+			if(orgstringfilters.length - refilter > 1)
+			{
+				for(var fi =0; fi<orgstringfilters.length;fi++)
+				{
+					var sfilter = orgstringfilters[fi][0];
+					var sfilterorg = orgstringfilters[fi][1];
+					if(!sfilter)
+						continue;
+					if(refilter == 1 && sfilter.selectedIndex > 0)
+						continue;
+					for(var i = sfilter.options.length -1; i>0;i--)
+						sfilter.remove(i);
+					for(var i = 0; i< sfilterorg.options.length; i++){
+						var opt = sfilterorg.options[i];
+						if(showIds[fi].indexOf(opt.value) > -1){
+							var newopt = new Option(opt.text,opt.value);
+							newopt.selected = opt.selected;
+							sfilter.add(newopt);
+						}
+					}
+				}
+			}			
+        } catch (e) {
+            alert("CTable.OnChangeFilter(): " + e);
+        }
+    }
+co = function (tableId,columnIndex,numberIndex) {
+		var Table = document.getElementById(tableId);
+		var index = numberIndex;
+		var ths = Table.getElementsByTagName("th");
+		if(index == null)
+			index = 0;
+		var th = ths[columnIndex];
+		var order = th.getAttribute("order");
+		for(var i=0; i< ths.length - 1; i++)
+		{
+			
+			var span = document.getElementById(tableId + '_orderInfo_' + i);
+			var spans = span.getElementsByTagName('span');
+			if(spans && spans.length ==2)
+			{
+				spans[0].innerHTML = '';
+				spans[1].innerHTML = '';
+				if(i == columnIndex)
+					spans[numberIndex].innerHTML = order>0?'&#9650;':'&#9660;';
+			}
+		}
+		for(var i = 2;i< Table.rows.length-2;i=i+2)
+		{
+			for(var j = i+2;j< Table.rows.length;j=j+2)
+			{
+				var row_1 = Table.rows[i];
+				var row_1_info = Table.rows[i+1];
+				var row_2 = Table.rows[j];
+				var row_2_info = Table.rows[j+1];
+				var cell_1 = row_1.cells[columnIndex];
+				var cell_2 = row_2.cells[columnIndex];
+				
+				n1 = CTable.GetNumber(cell_1);
+				n2 = CTable.GetNumber(cell_2);
+				var change = false;
+
+				if(columnIndex == ths.length -1)
+				{
+					var n1 = Number(row_1.getAttribute("oriorder"));
+					var n2 = Number(row_2.getAttribute("oriorder"));
+					change = n1>n2;
+				}
+				else
+				{
+					var c1 = row_1.cells[0].firstChild.className.replace("my","");
+					var c2 = row_2.cells[0].firstChild.className.replace("my","");
+					var s1 = cell_1.textContent;
+					var s2 = cell_2.textContent;
+					var cc = CompareString(c1,c2);
+					if(cc < 0)
+						change = false;
+					else if(cc > 0)
+						change = true;
+					else 
+					{
+						if(n1 && n2 && n1.length > 0 && n2.length > 0)
+						{
+							var number_1 = n1[index] * order;
+							var number_2 = n2[index] * order;
+							change = number_1 > number_2;
+						}
+						else
+							change = (CompareString(s1,s2) == order);
+					}
+				}
+				
+				if(change)
+				{
+					row_2.parentNode.insertBefore(row_2,row_1);
+					row_2_info.parentNode.insertBefore(row_2_info,row_1);
+				}
+			}			
+			Table.rows[i].className = "row" + (i/2) % 2;
+			Table.rows[i+1].className = Table.rows[i].className;
+		}
+		th.setAttribute("order",-1*order);
+	}
+sd = function (rowid,activeRows)
+	{
+		var row = document.getElementById(rowid);
+		var cell = row.cells[0];
+		var button = row.previousSibling.getElementsByTagName('input')[0];
+		activeRows = activeRows||[];
+		if(cell)
+		{
+			if(row.style.display == '')
+			{
+				button.value = '显示';
+				row.style.display = 'none';
+			}
+			else
+			{
+				button.value = '隐藏';
+				row.style.display = '';
+			}
+			var table = cell.getElementsByTagName('table')[0];
+			if(table.rows.length <= 1)
+			{
+				if(activeRows.length > 0)
+				{
+					debugger;
+					var ids = activeRows[0].split('_');
+					var level = Number(ids[1]);
+					var ac = table.insertRow(-1).insertCell(-1);
+					ac.colSpan = '3';
+					ac.innerHTML = '<hr/><br />层 ' + level + '<br /><hr/>';
+					for(var i = 0;i<activeRows.length;i++)
+					{
+						ids = activeRows[i].split('_');
+						var newlevel = Number(ids[1]);
+						if(newlevel != level)
+						{
+							ac = table.insertRow(-1).insertCell(-1);
+							ac.colSpan = '3';
+							ac.innerHTML = '<hr/><br />层 ' + newlevel + '<br /><hr/>';
+							level = newlevel;
+						}
+						var theRow = document.getElementById(activeRows[i]).cloneNode(true);
+						if(theRow)
+						{
+							table.appendChild(theRow);
+							var c = table.insertRow(-1).insertCell(-1);
+							c.colSpan = '3';
+							c.innerHTML = '<hr/>';
+						}
+					}
+				}
+			}			
+
+		}
+		
+	}
+st = function (id){
+		var statdiv = document.getElementById('stat_all');
+		var tabs = statdiv.getAttribute('tabs').split(',');
+		var showall = false;
+		var lishowall = document.getElementById('tab_showall');
+		var lihideall = document.getElementById('tab_hideall');
+		lishowall.className = 'not_selected';
+		lihideall.className = 'not_selected';
+		for(var i = 0; i< tabs.length;i++)
+		{
+			var tabid = tabs[i];
+			var tab = document.getElementById(tabid);
+			var li = document.getElementById('tab_' + tabid);
+			li.className = 'not_selected';
+			if(id == 'showall')
+			{
+				lishowall.className = 'selected';
+				tab.style.display = '';
+			}
+			else if (id == 'hideall')
+			{
+				lihideall.className = 'selected';
+				tab.style.display = 'none';
+			}
+			else
+			{
+				if(tabid == id)
+				{
+					tab.style.display = '';
+					li.className = 'selected';
+				}
+				else
+				{
+					tab.style.display = 'none';
+					li.className = 'not_selected';
+				}
+			}
+
+		}
+	}
+</script><style type="text/css">div.stat_all {font-size:14px;} div.stat_header {margin:1em auto 0.5em auto;} span.stat_title {margin: auto 1em auto 0em; font-size:20px; font-weight:bold; color:#FFF;} span.clickable {cursor:pointer;} span.pair_value {width:100%; font-size:12px;} span.pair_value span {width:50%; min-width:3em; text-align:right; color:#F8A400;} span.pair_value span + span {color:#00CC00;} table.pair_hero {width:100%; font-size:12px;} table.pair_hero td {width:50%; min-width:3em; text-align:right; color:#00CC00;} table.pair_hero td + td {color:#F8A400;} table[hide] {display:none;} table.pair_value {width:100%;} table.pair_value td {width:50%; min-width:3em; text-align:right; color:#F8A400;} table.pair_value td + td {color:#00CC00;} </style>
+</head>
+<body>
+<h1>20150330_c_mini_woodlander_archer</h1><br/>
+<table class="content_table" width="100%">
+<tbody><tr class="header">
+<th align="center">日期</th>
+<th>地城</th>
+<th> </th>
+</tr><tr class="row0">
+<td align="center"><span>2015年3月29日 17:48</span></td>
+<td><span>跳舞木偶夜总会</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='2009751/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='2009751/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='2009751/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='2009751/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='2009751/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='2009751/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年3月29日 04:31</span></td>
+<td><span>觉醒</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='2008165/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='2008165/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='2008165/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='2008165/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='2008165/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='2008165/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='2008165/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年3月21日 19:23</span></td>
+<td><span>受诅咒的遗迹</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1988203/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1988203/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1988203/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1988203/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1988203/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1988203/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1988203/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年3月21日 12:12</span></td>
+<td><span>瑞俄伯的女巫</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1987391/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1987391/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1987391/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1987391/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1987391/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1987391/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年3月14日 19:12</span></td>
+<td><span>受诅咒的遗迹</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1969859/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1969859/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1969859/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1969859/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1969859/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1969859/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1969859/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年3月13日 21:53</span></td>
+<td><span>盗墓贼</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1967844/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1967844/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1967844/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1967844/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1967844/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1967844/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1967844/level5.html';" type="button" value="层 5"/><input class="button clickable" onclick="document.location.href='1967844/level6.html';" type="button" value="层 6"/><input class="button clickable" onclick="document.location.href='1967844/level7.html';" type="button" value="层 7"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年03月12日 15:42</span></td>
+<td><span>瑞俄伯的女巫</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1964604/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1964604/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1964604/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1964604/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1964604/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1964604/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年03月08日 08:01</span></td>
+<td><span>盗墓贼</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1954300/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1954300/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1954300/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1954300/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1954300/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1954300/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1954300/level5.html';" type="button" value="层 5"/><input class="button clickable" onclick="document.location.href='1954300/level6.html';" type="button" value="层 6"/><input class="button clickable" onclick="document.location.href='1954300/level7.html';" type="button" value="层 7"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年3月8日 00:49</span></td>
+<td><span>德雷索尼亚的阴影</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1953732/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1953732/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1953732/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1953732/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1953732/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1953732/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1953732/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年03月05日 20:29</span></td>
+<td><span>德雷索尼亚的阴影</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1948528/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1948528/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1948528/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1948528/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1948528/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1948528/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1948528/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年03月05日 06:07</span></td>
+<td><span>危急的祖舒亚</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1947009/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1947009/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1947009/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1947009/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1947009/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1947009/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1947009/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年2月28日 17:42</span></td>
+<td><span>危急的祖舒亚</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1936046/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1936046/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1936046/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1936046/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1936046/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1936046/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1936046/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年2月28日 10:27</span></td>
+<td><span>危急的祖舒亚</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1935297/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1935297/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1935297/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1935297/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1935297/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1935297/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1935297/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年2月28日 03:23</span></td>
+<td><span>狩猎狼群</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1934571/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1934571/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1934571/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1934571/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1934571/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1934571/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年2月27日 20:14</span></td>
+<td><span>献祭</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1933904/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1933904/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1933904/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1933904/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1933904/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1933904/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1933904/level5.html';" type="button" value="层 5"/><input class="button clickable" onclick="document.location.href='1933904/level6.html';" type="button" value="层 6"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年2月27日 06:16</span></td>
+<td><span>山脉中的古老高塔</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1932424/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1932424/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1932424/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1932424/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1932424/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1932424/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1932424/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年02月26日 23:07</span></td>
+<td><span>山脉中的古老高塔</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1931851/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1931851/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1931851/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1931851/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1931851/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1931851/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1931851/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年02月26日 09:01</span></td>
+<td><span>巨魔难题</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1930412/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1930412/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1930412/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1930412/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1930412/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1930412/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年02月25日 10:39</span></td>
+<td><span>沼泽幼龙的狩猎之旅</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1928219/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1928219/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1928219/level1.html';" type="button" value="层 1"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年02月24日 18:15</span></td>
+<td><span>山脉中的古老高塔</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1926612/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1926612/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1926612/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1926612/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1926612/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1926612/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1926612/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年02月24日 01:43</span></td>
+<td><span>静水深流</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1925059/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1925059/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1925059/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1925059/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1925059/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1925059/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年02月23日 18:28</span></td>
+<td><span>献祭</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1924349/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1924349/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1924349/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1924349/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1924349/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1924349/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1924349/level5.html';" type="button" value="层 5"/><input class="button clickable" onclick="document.location.href='1924349/level6.html';" type="button" value="层 6"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年2月22日 20:55</span></td>
+<td><span>静水深流</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1922279/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1922279/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1922279/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1922279/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1922279/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1922279/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年02月21日 14:41</span></td>
+<td><span>狩猎狼群</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1919398/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1919398/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1919398/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1919398/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1919398/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1919398/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年02月21日 07:28</span></td>
+<td><span>献祭</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1918676/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1918676/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1918676/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1918676/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1918676/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1918676/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1918676/level5.html';" type="button" value="层 5"/><input class="button clickable" onclick="document.location.href='1918676/level6.html';" type="button" value="层 6"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年02月20日 16:42</span></td>
+<td><span>巨魔难题</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1917304/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1917304/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1917304/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1917304/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1917304/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1917304/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年02月18日 07:44</span></td>
+<td><span>沼泽幼龙的狩猎之旅</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1911576/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1911576/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1911576/level1.html';" type="button" value="层 1"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年02月18日 00:33</span></td>
+<td><span>竖琴</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1910937/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1910937/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1910937/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1910937/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1910937/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1910937/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1910937/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年02月17日 02:52</span></td>
+<td><span>瑞俄伯的女巫</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1908663/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1908663/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1908663/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1908663/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1908663/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1908663/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年02月16日 19:31</span></td>
+<td><span>克伦切的兽人洞</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1907863/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1907863/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1907863/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1907863/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1907863/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1907863/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年02月16日 12:24</span></td>
+<td><span>受诅咒的遗迹</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1907109/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1907109/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1907109/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1907109/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1907109/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1907109/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1907109/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年02月15日 15:00</span></td>
+<td><span>先人的骸骨</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1904887/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1904887/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1904887/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1904887/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1904887/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1904887/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年2月1日 15:15</span></td>
+<td><span>受诅咒的遗迹</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1869309/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1869309/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1869309/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1869309/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1869309/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1869309/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1869309/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年2月1日 08:01</span></td>
+<td><span>竖琴</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1868547/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1868547/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1868547/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1868547/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1868547/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1868547/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1868547/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年1月31日 17:30</span></td>
+<td><span>克伦切的兽人洞</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1867195/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1867195/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1867195/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1867195/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1867195/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1867195/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年1月31日 10:01</span></td>
+<td><span>先人的骸骨</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1866430/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1866430/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1866430/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1866430/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1866430/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1866430/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年01月29日 19:49</span></td>
+<td><span>莫里斯王墓</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1862615/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1862615/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1862615/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1862615/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1862615/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1862615/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年01月29日 12:44</span></td>
+<td><span>爬虫的侵袭</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1861911/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1861911/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1861911/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1861911/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1861911/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1861911/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年01月27日 02:06</span></td>
+<td><span>戒指</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1855990/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1855990/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1855990/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1855990/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1855990/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1855990/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1855990/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年01月26日 18:53</span></td>
+<td><span>药材铺</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1855230/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1855230/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1855230/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1855230/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1855230/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1855230/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1855230/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年1月17日 10:36</span></td>
+<td><span>爬虫的侵袭</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1833669/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1833669/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1833669/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1833669/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1833669/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1833669/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年1月16日 22:30</span></td>
+<td><span>莫里斯王墓</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1832528/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1832528/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1832528/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1832528/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1832528/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1832528/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年1月16日 15:15</span></td>
+<td><span>竖琴</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1831835/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1831835/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1831835/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1831835/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1831835/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1831835/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1831835/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年1月16日 08:00</span></td>
+<td><span>先人的骸骨</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1831115/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1831115/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1831115/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1831115/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1831115/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1831115/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年01月15日 17:44</span></td>
+<td><span>克伦切的兽人洞</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1829840/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1829840/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1829840/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1829840/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1829840/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1829840/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年01月14日 20:25</span></td>
+<td><span>戒指</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1827805/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1827805/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1827805/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1827805/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1827805/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1827805/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1827805/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年01月14日 12:53</span></td>
+<td><span>药材铺</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1827107/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1827107/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1827107/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1827107/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1827107/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1827107/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1827107/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年1月3日 17:31</span></td>
+<td><span>克伦切的兽人洞</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1803958/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1803958/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1803958/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1803958/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1803958/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1803958/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年1月3日 10:08</span></td>
+<td><span>爬虫的侵袭</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1803338/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1803338/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1803338/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1803338/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1803338/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1803338/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年1月3日 03:03</span></td>
+<td><span>竖琴</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1802755/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1802755/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1802755/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1802755/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1802755/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1802755/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1802755/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年1月2日 19:52</span></td>
+<td><span>戒指</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1802126/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1802126/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1802126/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1802126/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1802126/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1802126/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1802126/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年1月2日 11:28</span></td>
+<td><span>药材铺</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1801443/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1801443/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1801443/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1801443/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1801443/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1801443/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1801443/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2015年1月2日 03:43</span></td>
+<td><span>盗贼工会</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1800781/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1800781/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1800781/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1800781/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1800781/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1800781/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2015年01月01日 20:19</span></td>
+<td><span>先人的骸骨</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1800172/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1800172/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1800172/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1800172/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1800172/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1800172/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月29日 15:19</span></td>
+<td><span>戒指</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1793289/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1793289/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1793289/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1793289/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1793289/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1793289/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1793289/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月29日 08:02</span></td>
+<td><span>药材铺</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1792557/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1792557/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1792557/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1792557/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1792557/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1792557/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1792557/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月29日 00:12</span></td>
+<td><span>阴森的树林</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1791949/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1791949/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1791949/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1791949/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1791949/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1791949/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月28日 09:03</span></td>
+<td><span>爬虫的侵袭</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1790529/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1790529/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1790529/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1790529/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1790529/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1790529/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月27日 10:37</span></td>
+<td><span>竖琴</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1788540/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1788540/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1788540/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1788540/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1788540/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1788540/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1788540/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月26日 15:48</span></td>
+<td><span>圣诞节的白雾林</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1786826/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1786826/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1786826/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1786826/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1786826/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1786826/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1786826/level5.html';" type="button" value="层 5"/><input class="button clickable" onclick="document.location.href='1786826/level6.html';" type="button" value="层 6"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月23日 12:17</span></td>
+<td><span>先人的骸骨</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1779516/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1779516/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1779516/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1779516/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1779516/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1779516/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月23日 05:03</span></td>
+<td><span>克伦切的兽人洞</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1778793/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1778793/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1778793/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1778793/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1778793/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1778793/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月22日 21:49</span></td>
+<td><span>阴森的树林</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1778139/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1778139/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1778139/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1778139/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1778139/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1778139/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月22日 00:11</span></td>
+<td><span>竖琴</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1776048/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1776048/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1776048/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1776048/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1776048/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1776048/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1776048/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月21日 17:00</span></td>
+<td><span>戒指</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1775329/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1775329/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1775329/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1775329/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1775329/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1775329/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1775329/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月21日 09:29</span></td>
+<td><span>药材铺</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1774615/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1774615/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1774615/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1774615/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1774615/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1774615/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1774615/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月20日 11:23</span></td>
+<td><span>爬虫的侵袭</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1772569/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1772569/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1772569/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1772569/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1772569/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1772569/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月17日 16:45</span></td>
+<td><span>乌鸦之田</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1766136/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1766136/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1766136/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1766136/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1766136/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1766136/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1766136/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月17日 02:04</span></td>
+<td><span>远古恶魔</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1764662/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1764662/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1764662/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1764662/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1764662/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1764662/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月16日 18:52</span></td>
+<td><span>兵工厂内的幽灵</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1763949/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1763949/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1763949/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1763949/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1763949/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1763949/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月14日 16:12</span></td>
+<td><span>先人的骸骨</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1758898/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1758898/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1758898/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1758898/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1758898/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1758898/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月14日 09:03</span></td>
+<td><span>远古恶魔</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1758186/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1758186/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1758186/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1758186/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1758186/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1758186/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月14日 01:27</span></td>
+<td><span>戒指</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1757505/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1757505/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1757505/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1757505/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1757505/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1757505/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1757505/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月13日 16:53</span></td>
+<td><span>乌鸦之田</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1756626/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1756626/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1756626/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1756626/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1756626/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1756626/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1756626/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月13日 09:41</span></td>
+<td><span>药材铺</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1755890/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1755890/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1755890/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1755890/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1755890/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1755890/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1755890/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月13日 01:47</span></td>
+<td><span>兽人总部</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1755168/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1755168/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1755168/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1755168/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1755168/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1755168/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1755168/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月12日 18:55</span></td>
+<td><span>兽人地图</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1754420/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1754420/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1754420/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1754420/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1754420/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1754420/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月12日 12:04</span></td>
+<td><span>豺狼人墓穴</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1753703/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1753703/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1753703/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1753703/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1753703/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1753703/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1753703/level5.html';" type="button" value="层 5"/><input class="button clickable" onclick="document.location.href='1753703/level6.html';" type="button" value="层 6"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月10日 23:30</span></td>
+<td><span>第一份工作</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1749964/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1749964/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1749964/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1749964/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1749964/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1749964/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1749964/level5.html';" type="button" value="层 5"/><input class="button clickable" onclick="document.location.href='1749964/level6.html';" type="button" value="层 6"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月10日 16:37</span></td>
+<td><span>豺狼人墓穴</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1749256/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1749256/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1749256/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1749256/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1749256/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1749256/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1749256/level5.html';" type="button" value="层 5"/><input class="button clickable" onclick="document.location.href='1749256/level6.html';" type="button" value="层 6"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月10日 09:41</span></td>
+<td><span>森林里的庆祝会</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1748567/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1748567/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1748567/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1748567/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1748567/level3.html';" type="button" value="层 3"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月08日 22:00</span></td>
+<td><span>莫里斯王墓</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1744813/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1744813/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1744813/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1744813/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1744813/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1744813/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月08日 14:48</span></td>
+<td><span>盗贼工会</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1744035/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1744035/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1744035/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1744035/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1744035/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1744035/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月08日 07:35</span></td>
+<td><span>小题大做</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1743277/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1743277/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1743277/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1743277/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1743277/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1743277/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1743277/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月7日 10:05</span></td>
+<td><span>藏宝图</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1741132/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1741132/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1741132/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1741132/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1741132/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1741132/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1741132/level5.html';" type="button" value="层 5"/><input class="button clickable" onclick="document.location.href='1741132/level6.html';" type="button" value="层 6"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月7日 02:55</span></td>
+<td><span>盗贼工会</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1740414/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1740414/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1740414/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1740414/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1740414/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1740414/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月6日 19:46</span></td>
+<td><span>港口的仓库</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1739670/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1739670/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1739670/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1739670/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1739670/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1739670/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1739670/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月6日 12:33</span></td>
+<td><span>酒吧底下的地精洞穴</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1738941/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1738941/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1738941/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1738941/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1738941/level3.html';" type="button" value="层 3"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月6日 05:17</span></td>
+<td><span>药材铺</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1738157/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1738157/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1738157/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1738157/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1738157/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1738157/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1738157/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月05日 21:43</span></td>
+<td><span>酒吧地下的洞穴</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1737417/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1737417/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1737417/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1737417/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1737417/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1737417/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月05日 14:48</span></td>
+<td><span>村庄边上的酒吧</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1736652/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1736652/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1736652/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1736652/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1736652/level3.html';" type="button" value="层 3"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月04日 19:26</span></td>
+<td><span>乡间漫步</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1734604/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1734604/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1734604/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1734604/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1734604/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1734604/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1734604/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月04日 04:58</span></td>
+<td><span>小题大做</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1733028/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1733028/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1733028/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1733028/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1733028/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1733028/level4.html';" type="button" value="层 4"/><input class="button clickable" onclick="document.location.href='1733028/level5.html';" type="button" value="层 5"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月03日 20:39</span></td>
+<td><span>禁断邪教团之城</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1732159/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1732159/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1732159/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1732159/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1732159/level3.html';" type="button" value="层 3"/><input class="button clickable" onclick="document.location.href='1732159/level4.html';" type="button" value="层 4"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月03日 13:40</span></td>
+<td><span>前往禁断邪教团之城</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1731389/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1731389/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1731389/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1731389/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1731389/level3.html';" type="button" value="层 3"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月02日 22:09</span></td>
+<td><span>农场</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1729729/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1729729/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1729729/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1729729/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1729729/level3.html';" type="button" value="层 3"/></td>
+</tr><tr class="row0">
+<td align="center"><span>2014年12月02日 14:52</span></td>
+<td><span>去农场的路上</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1728923/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1728923/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1728923/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1728923/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1728923/level3.html';" type="button" value="层 3"/></td>
+</tr><tr class="row1">
+<td align="center"><span>2014年12月01日 17:15</span></td>
+<td><span>喧嚷的酒吧</span></td>
+<td align="center"><input class="button clickable" onclick="document.location.href='1726607/statistics.html';" type="button" value="统计表"/><input class="button clickable" onclick="document.location.href='1726607/items.html';" type="button" value="获得物品"/><input class="button clickable" onclick="document.location.href='1726607/level1.html';" type="button" value="层 1"/><input class="button clickable" onclick="document.location.href='1726607/level2.html';" type="button" value="层 2"/><input class="button clickable" onclick="document.location.href='1726607/level3.html';" type="button" value="层 3"/></td>
+</tr>
+
+</tbody></table>
+</body>
+</html>

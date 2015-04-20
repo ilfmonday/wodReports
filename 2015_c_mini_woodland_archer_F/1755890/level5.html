@@ -1,0 +1,619 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+
+<meta http-equiv="Content-Language" content="cn">
+
+<link rel="SHORTCUT ICON" href="http://info.world-of-dungeons.org/wod/css/WOD.gif" type="image/gif">
+    
+	<title>20141214cmini</title>
+	<link rel="stylesheet" type="text/css" href="http://canto.world-of-dungeons.org/wod/css/layout.css?1418401520">
+
+    <link rel="stylesheet" type="text/css" href="http://canto.world-of-dungeons.org/wod/css//skins/skin-3/skin-cn.css?1418401520">
+    
+
+<script type="text/javascript" src="http://canto.world-of-dungeons.org/wod/javascript/wod_standard.js?1418401520"></script>
+<script type="text/javascript" src="http://canto.world-of-dungeons.org/wod/javascript/wodtooltip.js?1418401520"></script>
+
+
+
+
+
+
+
+
+        
+    <style type="text/css">
+/*<![CDATA[*/
+      .tableMinWidthRespectingContent {
+        width:1px;
+        }
+        .tableMinHeightRespectingContent {
+        height:1px;
+        }
+/*]]>*/
+    </style>
+  <script type="text/javascript">window.onload = function(e){wodToolTipInit();wodInitialize('canto.world-of-dungeons.org','','/wod/spiel/','/wod/ajax/','WOD','cn','/wod/css//skins/skin-3/','/wod/css/','1','1');}
+function o(t,n){ 
+ var url="http://canto.world-of-dungeons.org/wod/spiel/";
+if(t=="n"){url += "help/npc"}
+if(t=="s"){url += "hero/skill"}
+if(t=="i"){url += "hero/item"}
+return wo(url + ".php?name=" + n + "&IS_POPUP=1");}
+var CTable=function(){};
+CTable.GetNumber = function (cell) {
+		var numberPatten = /^\s?([\d]+\.?[\d]*)\s?_?\s?([\d]*\.?[\d]*)\s?$/;
+		var pairTable = cell.firstChild;
+		var numberString = cell.textContent;
+		var numbers;
+		if(pairTable && pairTable.nodeName == "TABLE")
+		{
+			numberString = pairTable.id;
+		}
+		if(numberPatten.test(numberString))
+		{
+			numbers = [];
+			var numberres = numberPatten.exec(numberString);
+			if(numberres[1])
+				numbers.push(numberres[1]);
+			if(numberres[2])
+				numbers.push(numberres[2]);
+		}
+		return numbers;
+	}
+CompareString = function CompareString(a, b) {
+        a = a || "";
+        b = b || "";
+        return a.toLowerCase().localeCompare(b.toLowerCase(),"zh-CN-u-co-pinyin");
+    }
+ct = function (Id) {
+        try {
+            var Table = document.getElementById(Id);
+            if (Table.hasAttribute("hide")) {
+                Table.removeAttribute("hide");
+            } else {
+                Table.setAttribute("hide", "hide");
+            }
+        } catch (e) {
+            alert("CTable.OnClickTitle(): " + e);
+        }
+    }
+cf = function (tableId,filterRowId) {
+		try {
+            var Table = document.getElementById(tableId);
+			var filterRow = document.getElementById(filterRowId);
+			var stringfilters = [];
+			var orgstringfilters = [];
+			var numberfilters = [];
+			var filterString = "";
+			var showIds = [];
+			var refilter = 0;
+			
+			var showHero_0 = document.getElementById(tableId + "_checkbox_0_0");
+			var showHero_1 = document.getElementById(tableId + "_checkbox_0_1");
+			var showHero = [showHero_0.checked,showHero_1.checked];
+			
+			for(var i = 0; i< filterRow.cells.length; i++)
+			{
+				var cell = filterRow.cells[i];
+				var stringfilter = document.getElementById(filterRow.id + "_combobox_" + i);
+				var orgstringfilter = document.getElementById('org_' + filterRow.id + "_combobox_" + i);
+				var numberfilter = document.getElementById(filterRow.id + "_textbox_" + i);
+				if(stringfilter){
+					stringfilters.push(stringfilter.value);
+					refilter += stringfilter.selectedIndex > 0?1:0;
+				}
+				else
+					stringfilters.push(null);
+				if(orgstringfilter){
+					for(var ii = 0, ij = orgstringfilter.options.length; ii < ij; ++ii) {
+						if(orgstringfilter.options[ii].value === stringfilter.value) {
+						   orgstringfilter.selectedIndex = ii;
+						   break;
+						}
+					}
+					orgstringfilters.push([stringfilter,orgstringfilter]);
+					showIds.push([]);
+				}
+				if(numberfilter)
+					numberfilters.push(numberfilter.value);
+				else
+					numberfilters.push(null);
+			}
+			var index = 0;
+			var patten = /([\(|\[|>|<|=|]*)\s*([\d]*\.?[\d]*)\s*-?\s*([\d]*\.?[\d]*)\s*([\)|\]|\s]?)/;
+			for(var i = 2;i< Table.rows.length;i=i+2)
+			{
+				var row = Table.rows[i];
+				var rowInfo = Table.rows[i+1];
+				var rowIds = row.id.split(",");
+				var show = true;
+				
+				var hero = row.cells[0].getElementsByTagName('a')[0];
+				var heroKind = hero.getAttribute("kind");
+				show = showHero[heroKind];
+				if(show)
+				{
+					for(var fi =0; fi<stringfilters.length;fi++)
+					{
+						var sfilter = stringfilters[fi];
+						if(!sfilter)
+							continue;
+						if(sfilter != fi + "_all" && sfilter != rowIds[fi])
+						{
+							show = false;
+							break;
+						}
+					}
+				}
+				if(show)
+				{
+					for(fi=0;fi<numberfilters.length;fi++)
+					{
+						var nfilter = numberfilters[fi];
+						
+						if(!nfilter)
+							continue;
+						else 
+						{
+							var numbers = CTable.GetNumber(row.cells[fi]);
+							var nfilters = nfilter.split(/\s*[,|，]\s*/);
+							for(ni = 0; ni < numbers.length; ni++)
+							{
+								var theFilter = nfilters[ni];
+								var testString = "";
+								if(theFilter && patten.test(theFilter))
+								{
+									var	op = "==";
+									var res = patten.exec(theFilter);
+									if(res[1])
+									{
+										op = res[1];
+										if(res[3])
+										if( op == "[") op = ">=";
+										if( op == "(") op = ">";
+										if( op == "=") op = "==";
+									}
+									else
+									{
+										if(res[3])
+											op = ">=";
+									}
+									testString = numbers[ni] + op + res[2];
+									if(res[3])
+									{
+										op = "<=";
+										if(res[4])
+										{
+											op = res[4]
+											if( op == "]") op = "<=";
+											if( op == ")") op = "<";
+										}
+										testString += " && " + numbers[ni] + op + res[3];
+									}
+									show = eval(testString);
+									if(!show)
+										break;
+								}
+							}
+						}
+						if(!show)
+							break;
+					}
+				}
+				row.style.display = show? '':'none';
+				rowInfo.style.display = show? rowInfo.style.display:'none';
+				if(show)
+				{
+					row.className = "row" + index % 2;
+					rowInfo.className = row.className;
+					index++;
+					for(var fi =0; fi<orgstringfilters.length;fi++)
+					{
+						var id = rowIds[fi];
+						if(showIds[fi].indexOf(id) <= -1)
+							showIds[fi].push(id);
+					}
+				}
+			}
+			
+			if(orgstringfilters.length - refilter > 1)
+			{
+				for(var fi =0; fi<orgstringfilters.length;fi++)
+				{
+					var sfilter = orgstringfilters[fi][0];
+					var sfilterorg = orgstringfilters[fi][1];
+					if(!sfilter)
+						continue;
+					if(refilter == 1 && sfilter.selectedIndex > 0)
+						continue;
+					for(var i = sfilter.options.length -1; i>0;i--)
+						sfilter.remove(i);
+					for(var i = 0; i< sfilterorg.options.length; i++){
+						var opt = sfilterorg.options[i];
+						if(showIds[fi].indexOf(opt.value) > -1){
+							var newopt = new Option(opt.text,opt.value);
+							newopt.selected = opt.selected;
+							sfilter.add(newopt);
+						}
+					}
+				}
+			}			
+        } catch (e) {
+            alert("CTable.OnChangeFilter(): " + e);
+        }
+    }
+co = function (tableId,columnIndex,numberIndex) {
+		var Table = document.getElementById(tableId);
+		var index = numberIndex;
+		var ths = Table.getElementsByTagName("th");
+		if(index == null)
+			index = 0;
+		var th = ths[columnIndex];
+		var order = th.getAttribute("order");
+		for(var i=0; i< ths.length - 1; i++)
+		{
+			
+			var span = document.getElementById(tableId + '_orderInfo_' + i);
+			var spans = span.getElementsByTagName('span');
+			if(spans && spans.length ==2)
+			{
+				spans[0].innerHTML = '';
+				spans[1].innerHTML = '';
+				if(i == columnIndex)
+					spans[numberIndex].innerHTML = order>0?'&#9650;':'&#9660;';
+			}
+		}
+		for(var i = 2;i< Table.rows.length-2;i=i+2)
+		{
+			for(var j = i+2;j< Table.rows.length;j=j+2)
+			{
+				var row_1 = Table.rows[i];
+				var row_1_info = Table.rows[i+1];
+				var row_2 = Table.rows[j];
+				var row_2_info = Table.rows[j+1];
+				var cell_1 = row_1.cells[columnIndex];
+				var cell_2 = row_2.cells[columnIndex];
+				
+				n1 = CTable.GetNumber(cell_1);
+				n2 = CTable.GetNumber(cell_2);
+				var change = false;
+
+				if(columnIndex == ths.length -1)
+				{
+					var n1 = Number(row_1.getAttribute("oriorder"));
+					var n2 = Number(row_2.getAttribute("oriorder"));
+					change = n1>n2;
+				}
+				else
+				{
+					var c1 = row_1.cells[0].firstChild.className.replace("my","");
+					var c2 = row_2.cells[0].firstChild.className.replace("my","");
+					var s1 = cell_1.textContent;
+					var s2 = cell_2.textContent;
+					var cc = CompareString(c1,c2);
+					if(cc < 0)
+						change = false;
+					else if(cc > 0)
+						change = true;
+					else 
+					{
+						if(n1 && n2 && n1.length > 0 && n2.length > 0)
+						{
+							var number_1 = n1[index] * order;
+							var number_2 = n2[index] * order;
+							change = number_1 > number_2;
+						}
+						else
+							change = (CompareString(s1,s2) == order);
+					}
+				}
+				
+				if(change)
+				{
+					row_2.parentNode.insertBefore(row_2,row_1);
+					row_2_info.parentNode.insertBefore(row_2_info,row_1);
+				}
+			}			
+			Table.rows[i].className = "row" + (i/2) % 2;
+			Table.rows[i+1].className = Table.rows[i].className;
+		}
+		th.setAttribute("order",-1*order);
+	}
+sd = function (rowid,activeRows)
+	{
+		var row = document.getElementById(rowid);
+		var cell = row.cells[0];
+		var button = row.previousSibling.getElementsByTagName('input')[0];
+		activeRows = activeRows||[];
+		if(cell)
+		{
+			if(row.style.display == '')
+			{
+				button.value = '显示';
+				row.style.display = 'none';
+			}
+			else
+			{
+				button.value = '隐藏';
+				row.style.display = '';
+			}
+			var table = cell.getElementsByTagName('table')[0];
+			if(table.rows.length <= 1)
+			{
+				if(activeRows.length > 0)
+				{
+					debugger;
+					var ids = activeRows[0].split('_');
+					var level = Number(ids[1]);
+					var ac = table.insertRow(-1).insertCell(-1);
+					ac.colSpan = '3';
+					ac.innerHTML = '<hr/><br />层 ' + level + '<br /><hr/>';
+					for(var i = 0;i<activeRows.length;i++)
+					{
+						ids = activeRows[i].split('_');
+						var newlevel = Number(ids[1]);
+						if(newlevel != level)
+						{
+							ac = table.insertRow(-1).insertCell(-1);
+							ac.colSpan = '3';
+							ac.innerHTML = '<hr/><br />层 ' + newlevel + '<br /><hr/>';
+							level = newlevel;
+						}
+						var theRow = document.getElementById(activeRows[i]).cloneNode(true);
+						if(theRow)
+						{
+							table.appendChild(theRow);
+							var c = table.insertRow(-1).insertCell(-1);
+							c.colSpan = '3';
+							c.innerHTML = '<hr/>';
+						}
+					}
+				}
+			}			
+
+		}
+		
+	}
+st = function (id){
+		var statdiv = document.getElementById('stat_all');
+		var tabs = statdiv.getAttribute('tabs').split(',');
+		var showall = false;
+		var lishowall = document.getElementById('tab_showall');
+		var lihideall = document.getElementById('tab_hideall');
+		lishowall.className = 'not_selected';
+		lihideall.className = 'not_selected';
+		for(var i = 0; i< tabs.length;i++)
+		{
+			var tabid = tabs[i];
+			var tab = document.getElementById(tabid);
+			var li = document.getElementById('tab_' + tabid);
+			li.className = 'not_selected';
+			if(id == 'showall')
+			{
+				lishowall.className = 'selected';
+				tab.style.display = '';
+			}
+			else if (id == 'hideall')
+			{
+				lihideall.className = 'selected';
+				tab.style.display = 'none';
+			}
+			else
+			{
+				if(tabid == id)
+				{
+					tab.style.display = '';
+					li.className = 'selected';
+				}
+				else
+				{
+					tab.style.display = 'none';
+					li.className = 'not_selected';
+				}
+			}
+
+		}
+	}
+</script><style type="text/css">div.stat_all {font-size:14px;} div.stat_header {margin:1em auto 0.5em auto;} span.stat_title {margin: auto 1em auto 0em; font-size:20px; font-weight:bold; color:#FFF;} span.clickable {cursor:pointer;} span.pair_value {width:100%; font-size:12px;} span.pair_value span {width:50%; min-width:3em; text-align:right; color:#F8A400;} span.pair_value span + span {color:#00CC00;} table.pair_hero {width:100%; font-size:12px;} table.pair_hero td {width:50%; min-width:3em; text-align:right; color:#00CC00;} table.pair_hero td + td {color:#F8A400;} table[hide] {display:none;} table.pair_value {width:100%;} table.pair_value td {width:50%; min-width:3em; text-align:right; color:#F8A400;} table.pair_value td + td {color:#00CC00;} </style>
+</head>
+<body>
+<form action="/wod/spiel//dungeon/report.php?session_hero_id=107480&amp;is_popup=1" name="the_form" accept-charset="UTF-8" method="post"> <input name="session_hero_id" value="107480" type="hidden"><input name="wod_post_id" value="vhistkoi7zeoi4ojp6ls4azrv6ekn5o9" type="hidden"><input name="wod_post_world" value="CC" type="hidden"><input name="IS_POPUP" value="1" type="hidden"><input name="pay_from_group_cash_box" value="0" type="hidden">
+<input name="put_purchases_to" value="go_lager" type="hidden">
+
+
+          <div style="height: 100%">
+
+<input name="cur_rep_id" value="1755890" type="hidden">
+<input name="report_id[0]" value="1755890" type="hidden">
+<input name="nr" value="" type="hidden">
+
+<input name="current_level" value="5" type="hidden">
+
+
+<h1>战报: <i>新团队：伊波家の使用人</i></h1>
+
+<p>
+ <input onclick="document.location.href='../index.html';" name="overview" value="摘要" class="button clickable" type="button"> <input onclick="document.location.href='statistics.html';" name="stats[0]" value="统计表" class="button clickable" type="button"> <input onclick="document.location.href='items.html';" name="items[0]" value="获得物品" class="button clickable" type="button"> <input name="disabled" value="详细资料" class="button_disabled" type="button"></p>
+
+
+
+<div tabs="stat_ini,stat_buff,stat_buffed" class="stat_all tab" id="stat_all"><ul><li class="selected" id="tab_stat_ini"><a onclick="st('stat_ini');" href="#">先攻权</a></li><li class="not_selected" id="tab_stat_buff"><a onclick="st('stat_buff');" href="#">给予增益</a></li><li class="not_selected" id="tab_stat_buffed"><a onclick="st('stat_buffed');" href="#">接受增益</a></li><li id="tab_showall" class="not_selected"><a onclick="st('showall');" href="#" id="show_all_a">全部显示</a></li><li id="tab_hideall" class="not_selected"><a onclick="st('hideall');" href="#" id="show_all_a">全部隐藏</a></li></ul><div class="bar" id="stat_bar"></div><div class="content" id="stat_ini"><div style="text-align: center;" class="stat_header"><span onclick="ct('table_stat_ini');" class="stat_title clickable">先攻权</span></div><table id="table_stat_ini" style="margin: 0px auto;" class="content_table"><tbody><tr class="content_table_header"><th order="-1" id="th_stat_ini0" class="content_table stat_order"><span id="stat_ini_col0">人物<span class="pair_hero" id="table_stat_ini_orderInfo_0"><span></span><span></span></span></span><table class="pair_hero"><tbody><tr><td><input onclick="cf('table_stat_ini','filter_stat_ini');" id="table_stat_ini_checkbox_0_0" value="0" type="checkbox">英雄</td><td><input onclick="cf('table_stat_ini','filter_stat_ini');" id="table_stat_ini_checkbox_0_1" value="1" type="checkbox">对手</td></tr></tbody></table></th><th order="-1" id="th_stat_ini1" class="content_table stat_order"><span onclick="co('table_stat_ini',1,0);" class="clickable" id="stat_ini_col1">平均值<span id="table_stat_ini_orderInfo_1"><span></span><span></span></span></span></th><th order="-1" id="th_stat_ini2" class="content_table stat_order"><span onclick="co('table_stat_ini',2,0);" class="clickable" id="stat_ini_col2">次数<span id="table_stat_ini_orderInfo_2"><span></span><span></span></span></span></th><th order="-1" id="th_stat_ini3" class="content_table stat_order"><span onclick="co('table_stat_ini',3,0);" class="clickable" id="stat_ini_col3">Max值<span id="table_stat_ini_orderInfo_3"><span></span><span></span></span></span></th><th order="-1" id="th_stat_ini4" class="content_table stat_order"><span onclick="co('table_stat_ini',4,0);" class="clickable" id="stat_ini_col4">Min值<span id="table_stat_ini_orderInfo_4"><span></span><span></span></span></span></th><th order="-1" id="th_stat_ini5" class="content_table stat_order"><span onclick="co('table_stat_ini',5,0);" class="clickable" id="stat_ini_col5">STD值<span id="table_stat_ini_orderInfo_5"><span></span><span></span></span></span></th><th order="-1" id="th_stat_ini6" class="content_table stat_order"><span onclick="co('table_stat_ini',6,0);" class="clickable" id="stat_ini_col6">数值列表<span id="table_stat_ini_orderInfo_6"><span></span><span></span></span></span></th></tr><tr class="content_table_filter_row" id="filter_stat_ini"><td><select onchange="cf('table_stat_ini','filter_stat_ini');" id="filter_stat_ini_combobox_0"><option value="0_all">全部</option><option value="0_0">伊波家の使用人</option></select><select style="display: none;" onchange="cf('table_stat_ini','filter_stat_ini');" id="org_filter_stat_ini_combobox_0"><option value="0_all">全部</option><option value="0_0">伊波家の使用人</option></select></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td style="text-align: center;"><input onclick="cf('table_stat_ini','filter_stat_ini');" class="button" value="查询" id="filter_stat_ini_button" type="button"></td></tr><tr id="0_0,1_-1,2_-1,3_-1,4_-1,5_-1,6_-1" oriorder="0" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_myhero" kind="0" onclick="return jump('h',107480)" href="#">伊波家の使用人</a></td><td style="text-align: right;" class="content_table">20.00</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: right;" class="content_table">20</td><td style="text-align: right;" class="content_table">20</td><td style="text-align: right;" class="content_table">0</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_ini_0',['activeRow_5_1_0_1']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_ini_0" class="row0"><td colspan="7"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"><span>20</span></td></tr></tbody></table></td></tr></tbody></table></div><div style="display: none;" class="content" id="stat_buff"><div style="text-align: center;" class="stat_header"><span onclick="ct('table_stat_buff');" class="stat_title clickable">给予增益</span></div><table id="table_stat_buff" style="margin: 0px auto;" class="content_table"><tbody><tr class="content_table_header"><th order="-1" id="th_stat_buff0" class="content_table stat_order"><span id="stat_buff_col0">人物<span class="pair_hero" id="table_stat_buff_orderInfo_0"><span></span><span></span></span></span><table class="pair_hero"><tbody><tr><td><input onclick="cf('table_stat_buff','filter_stat_buff');" id="table_stat_buff_checkbox_0_0" value="0" type="checkbox">英雄</td><td><input onclick="cf('table_stat_buff','filter_stat_buff');" id="table_stat_buff_checkbox_0_1" value="1" type="checkbox">对手</td></tr></tbody></table></th><th order="-1" id="th_stat_buff1" class="content_table stat_order"><span onclick="co('table_stat_buff',1,0);" class="clickable" id="stat_buff_col1">技能<span id="table_stat_buff_orderInfo_1"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buff2" class="content_table stat_order"><span onclick="co('table_stat_buff',2,0);" class="clickable" id="stat_buff_col2">物品<span id="table_stat_buff_orderInfo_2"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buff3" class="content_table stat_order"><span onclick="co('table_stat_buff',3,0);" class="clickable" id="stat_buff_col3">增益类型<span id="table_stat_buff_orderInfo_3"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buff4" class="content_table stat_order"><span onclick="co('table_stat_buff',4,0);" class="clickable" id="stat_buff_col4">次数<span id="table_stat_buff_orderInfo_4"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buff5" class="content_table stat_order"><span onclick="co('table_stat_buff',5,0);" class="clickable" id="stat_buff_col5">详细列表<span id="table_stat_buff_orderInfo_5"><span></span><span></span></span></span></th></tr><tr class="content_table_filter_row" id="filter_stat_buff"><td><select onchange="cf('table_stat_buff','filter_stat_buff');" id="filter_stat_buff_combobox_0"><option value="0_all">全部</option><option value="0_0">伊波家の使用人</option></select><select style="display: none;" onchange="cf('table_stat_buff','filter_stat_buff');" id="org_filter_stat_buff_combobox_0"><option value="0_all">全部</option><option value="0_0">伊波家の使用人</option></select></td><td><select onchange="cf('table_stat_buff','filter_stat_buff');" id="filter_stat_buff_combobox_1"><option value="1_all">全部</option><option value="1_0">燃烧箭</option></select><select style="display: none;" onchange="cf('table_stat_buff','filter_stat_buff');" id="org_filter_stat_buff_combobox_1"><option value="1_all">全部</option><option value="1_0">燃烧箭</option></select></td><td><select onchange="cf('table_stat_buff','filter_stat_buff');" id="filter_stat_buff_combobox_2"><option value="2_all">全部</option><option value="2_0">魔力加持灵巧长弓, 地精箭</option></select><select style="display: none;" onchange="cf('table_stat_buff','filter_stat_buff');" id="org_filter_stat_buff_combobox_2"><option value="2_all">全部</option><option value="2_0">魔力加持灵巧长弓, 地精箭</option></select></td><td><select onchange="cf('table_stat_buff','filter_stat_buff');" id="filter_stat_buff_combobox_3"><option value="3_all">全部</option><option value="3_0">回合前</option></select><select style="display: none;" onchange="cf('table_stat_buff','filter_stat_buff');" id="org_filter_stat_buff_combobox_3"><option value="3_all">全部</option><option value="3_0">回合前</option></select></td><td><input size="6" type="text"></td><td style="text-align: center;"><input onclick="cf('table_stat_buff','filter_stat_buff');" class="button" value="查询" id="filter_stat_buff_button" type="button"></td></tr><tr id="0_0,1_0,2_0,3_0,4_-1,5_-1" oriorder="0" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_myhero" kind="0" onclick="return jump('h',107480)" href="#">伊波家の使用人</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E7%87%83%E7%83%A7%E7%AE%AD');" href="#">燃烧箭</a></td><td style="text-align: left;" class="content_table"><span><a class="report " kind="-1" onclick="return o('i','%E9%AD%94%E5%8A%9B%E5%8A%A0%E6%8C%81%E7%81%B5%E5%B7%A7%E9%95%BF%E5%BC%93');" href="#">魔力加持灵巧长弓</a>, <a class="report  rep_uni item_unique" kind="-1" onclick="return o('i','%E5%9C%B0%E7%B2%BE%E7%AE%AD');" href="#">地精箭</a></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buff_0',['activeRow_5_1_0_0']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buff_0" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr></tbody></table></div><div style="display: none;" class="content" id="stat_buffed"><div style="text-align: center;" class="stat_header"><span onclick="ct('table_stat_buffed');" class="stat_title clickable">接受增益</span></div><table id="table_stat_buffed" style="margin: 0px auto;" class="content_table"><tbody><tr class="content_table_header"><th order="-1" id="th_stat_buffed0" class="content_table stat_order"><span id="stat_buffed_col0">人物<span class="pair_hero" id="table_stat_buffed_orderInfo_0"><span></span><span></span></span></span><table class="pair_hero"><tbody><tr><td><input onclick="cf('table_stat_buffed','filter_stat_buffed');" id="table_stat_buffed_checkbox_0_0" value="0" type="checkbox">英雄</td><td><input onclick="cf('table_stat_buffed','filter_stat_buffed');" id="table_stat_buffed_checkbox_0_1" value="1" type="checkbox">对手</td></tr></tbody></table></th><th order="-1" id="th_stat_buffed1" class="content_table stat_order"><span onclick="co('table_stat_buffed',1,0);" class="clickable" id="stat_buffed_col1">技能<span id="table_stat_buffed_orderInfo_1"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buffed2" class="content_table stat_order"><span onclick="co('table_stat_buffed',2,0);" class="clickable" id="stat_buffed_col2">物品<span id="table_stat_buffed_orderInfo_2"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buffed3" class="content_table stat_order"><span onclick="co('table_stat_buffed',3,0);" class="clickable" id="stat_buffed_col3">增益类型<span id="table_stat_buffed_orderInfo_3"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buffed4" class="content_table stat_order"><span onclick="co('table_stat_buffed',4,0);" class="clickable" id="stat_buffed_col4">次数<span id="table_stat_buffed_orderInfo_4"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buffed5" class="content_table stat_order"><span onclick="co('table_stat_buffed',5,0);" class="clickable" id="stat_buffed_col5">详细列表<span id="table_stat_buffed_orderInfo_5"><span></span><span></span></span></span></th></tr><tr class="content_table_filter_row" id="filter_stat_buffed"><td><select onchange="cf('table_stat_buffed','filter_stat_buffed');" id="filter_stat_buffed_combobox_0"><option value="0_all">全部</option><option value="0_0">伊波家の使用人</option></select><select style="display: none;" onchange="cf('table_stat_buffed','filter_stat_buffed');" id="org_filter_stat_buffed_combobox_0"><option value="0_all">全部</option><option value="0_0">伊波家の使用人</option></select></td><td><select onchange="cf('table_stat_buffed','filter_stat_buffed');" id="filter_stat_buffed_combobox_1"><option value="1_all">全部</option><option value="1_0">燃烧箭</option></select><select style="display: none;" onchange="cf('table_stat_buffed','filter_stat_buffed');" id="org_filter_stat_buffed_combobox_1"><option value="1_all">全部</option><option value="1_0">燃烧箭</option></select></td><td><select onchange="cf('table_stat_buffed','filter_stat_buffed');" id="filter_stat_buffed_combobox_2"><option value="2_all">全部</option><option value="2_0">魔力加持灵巧长弓, 地精箭</option></select><select style="display: none;" onchange="cf('table_stat_buffed','filter_stat_buffed');" id="org_filter_stat_buffed_combobox_2"><option value="2_all">全部</option><option value="2_0">魔力加持灵巧长弓, 地精箭</option></select></td><td><select onchange="cf('table_stat_buffed','filter_stat_buffed');" id="filter_stat_buffed_combobox_3"><option value="3_all">全部</option><option value="3_0">回合前</option></select><select style="display: none;" onchange="cf('table_stat_buffed','filter_stat_buffed');" id="org_filter_stat_buffed_combobox_3"><option value="3_all">全部</option><option value="3_0">回合前</option></select></td><td><input size="6" type="text"></td><td style="text-align: center;"><input onclick="cf('table_stat_buffed','filter_stat_buffed');" class="button" value="查询" id="filter_stat_buffed_button" type="button"></td></tr><tr id="0_0,1_0,2_0,3_0,4_-1,5_-1" oriorder="0" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_myhero" kind="0" onclick="return jump('h',107480)" href="#">伊波家の使用人</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E7%87%83%E7%83%A7%E7%AE%AD');" href="#">燃烧箭</a></td><td style="text-align: left;" class="content_table"><span><a class="report " kind="-1" onclick="return o('i','%E9%AD%94%E5%8A%9B%E5%8A%A0%E6%8C%81%E7%81%B5%E5%B7%A7%E9%95%BF%E5%BC%93');" href="#">魔力加持灵巧长弓</a>, <a class="report  rep_uni item_unique" kind="-1" onclick="return o('i','%E5%9C%B0%E7%B2%BE%E7%AE%AD');" href="#">地精箭</a></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_0',['activeRow_5_1_0_0']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_0" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr></tbody></table></div><hr></div><h2>2014年12月13日 09:41 - 药材铺</h2>
+
+    
+        
+
+
+<table class="content_table" width="100%">
+ <tbody><tr class="row0">
+ <td>
+
+<p class="navigation levels">
+ <i><a name="1">层  5</a>
+    </i>
+
+ &nbsp;&nbsp;
+
+ <input onclick="document.location.href='level1.html';" name="level[1]" value="层  1" class="button clickable" type="button"> <input onclick="document.location.href='level2.html';" name="level[2]" value="层  2" class="button clickable" type="button"> <input onclick="document.location.href='level3.html';" name="level[3]" value="层  3" class="button clickable" type="button"> <input onclick="document.location.href='level4.html';" name="level[4]" value="层  4" class="button clickable" type="button"> <input name="disabled" value="层  5" class="button_disabled" type="button"></p>
+
+ <p class="navigation in_report">
+          =返回=
+              <a href="#end">=下一步=</a>         
+     <a href="#1">=最后回合=</a> 
+    
+    
+ </p>
+
+
+
+    <h3><a name="1">老人的忠告</a></h3>
+	<p class="rep_level_description">你把所有入侵者都赶离店铺了。商人衷心地感谢你。<br>
+「一直以来，这些怪物都在攻击我的店铺。这一切都是因这棵怪异的植物而起。作为感谢，把这年幼的植物带走吧。」
+</p>
+
+
+
+
+<!-- computed by s01.neise-games.de on 2014-12-13 at 02:41:27 (combat service build time: Dec 12 2014  04:32:22) -->
+<hr>
+<p class="rep_round_headline">回合 1</p>
+<hr>
+<p class="rep_status_headline">进攻者:</p>
+
+<table class="rep_status_table">
+<tbody><tr>
+<th></th>
+<th>名称</th>
+<th>等级</th>
+<th>位置</th>
+<th>体力</th>
+<th class="resource">Resource</th>
+<th>状态</th>
+</tr>
+<tr>
+<td class="number">1</td>
+<td class="hero"><a href="#" onclick="return jump('h',107480)" class="rep_myhero">伊波家の使用人</a>
+</td>
+<td>6</td>
+<td class="position">左翼</td>
+<td>21</td>
+<td class="resource">13 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+</tbody></table>
+
+<hr>
+<p class="rep_status_headline">防御者:</p>
+
+<table class="rep_status_table">
+<tbody><tr>
+<th></th>
+<th>名称</th>
+<th>等级</th>
+<th>位置</th>
+<th>体力</th>
+<th class="resource">Resource</th>
+<th>状态</th>
+</tr>
+<tr><td></td><td colspan="6"><i>没有可交战的对手</i></td></tr>
+</tbody></table>
+
+<hr>
+<table>
+<tbody><tr id="activeRow_5_1_0_0"><td class="rep_initiative">&nbsp;</td>
+<td><a href="#" onclick="return jump('h',107480)" class="rep_myhero">伊波家の使用人</a>
+使用<a href="#" onclick="return o('s','%E7%87%83%E7%83%A7%E7%AE%AD');" onmouseover="wodToolTip(this,'伤害 火焰伤害 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.02</span></span>/<span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.50</span></span> (远程)')">燃烧箭<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-3/images/icons/inf.gif" alt="" border="0"></a> (<span class="rep_mana_cost">2 法力</span>/<a href="#" onclick="return o('i','%E9%AD%94%E5%8A%9B%E5%8A%A0%E6%8C%81%E7%81%B5%E5%B7%A7%E9%95%BF%E5%BC%93');" class="report ">魔力加持灵巧长弓</a>,<a href="#" onclick="return o('i','%E5%9C%B0%E7%B2%BE%E7%AE%AD');" class="report  rep_uni item_unique">地精箭</a>)给</td><td>自身</td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',107480)" class="rep_myhero">伊波家の使用人</a>
+ 恢复<span class="rep_gain">2</span>法力.</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_5_1_0_1"><td class="rep_initiative">先攻20<br><span class="rep_action">第1步行动 / 共1步</span></td>
+<td colspan="2"><a href="#" onclick="return jump('h',107480)" class="rep_myhero">伊波家の使用人</a>
+ 不能执行任何动作。</td></tr><tr><td colspan="3"><hr></td></tr></tbody></table>
+<hr>
+<p class="rep_status_headline">进攻者:</p>
+
+<table class="rep_status_table">
+<tbody><tr>
+<th></th>
+<th>名称</th>
+<th>等级</th>
+<th>位置</th>
+<th>体力</th>
+<th class="resource">Resource</th>
+<th>状态</th>
+</tr>
+<tr>
+<td class="number">1</td>
+<td class="hero"><a href="#" onclick="return jump('h',107480)" class="rep_myhero">伊波家の使用人</a>
+</td>
+<td>6</td>
+<td class="position">左翼</td>
+<td>21</td>
+<td class="resource">13 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+</tbody></table>
+
+<hr>
+<p class="rep_status_headline">防御者:</p>
+
+<table class="rep_status_table">
+<tbody><tr>
+<th></th>
+<th>名称</th>
+<th>等级</th>
+<th>位置</th>
+<th>体力</th>
+<th class="resource">Resource</th>
+<th>状态</th>
+</tr>
+<tr><td></td><td colspan="6"><i>没有可交战的对手</i></td></tr>
+</tbody></table>
+
+<p class="rep_room_end">进攻者胜利了！</p>
+<hr><p class="rep_level_success">对这份「酬劳」感到有点失望的你回到街上。一名老人感兴趣的望向你。似乎他目击了整件事情的经过。
+</p><p class="rep_level_success">
+「如果你不用这些草药，可以给炼金术士或猎人。他们会以令人满意的价钱买下。」
+</p><p class="rep_level_success">
+他笑了笑，便离去了。</p>
+<hr>
+<!-- WINNER MSG PLACEHOLDER -->
+<div class="rewards points"><a href="#" onclick="return jump('h',107480)" class="rep_myhero">伊波家の使用人</a>
+ 得到18<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-3/images/icons/lang/cn/ep.gif" alt="经验点" title="经验点" border="0">并找到50<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-3/images/icons/lang/cn/gold.gif" alt="金币" title="金币" border="0"></div>
+<div class="rewards item"><a href="#" onclick="return jump('h',107480)" class="rep_myhero">伊波家の使用人</a>
+ 找到  <img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-3/images/icons/zustand_6.gif" alt="" border="0"><a href="#" onclick="return o('i','%E6%AF%92%E8%95%88%EF%BC%88%E5%B0%8F%E7%9B%86%EF%BC%89');" class="report ">毒蕈（小盆）</a> <img title="空" src="http://canto.world-of-dungeons.org/wod/css/icons/WOD/gems/gem_0.png" alt=""></div>
+<div class="rewards item"><a href="#" onclick="return jump('h',107480)" class="rep_myhero">伊波家の使用人</a>
+ 找到  <img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-3/images/icons/zustand_6.gif" alt="" border="0"><a href="#" onclick="return o('i','%E9%AD%94%E6%B3%95%E6%AF%92%E8%8D%AF%EF%BC%88%E5%B0%8F%E7%9B%86%EF%BC%89');" class="report ">魔法毒药（小盆）</a> <img title="空" src="http://canto.world-of-dungeons.org/wod/css/icons/WOD/gems/gem_0.png" alt=""></div>
+
+
+<p class="navigation in_report">
+         <a href="#1">=返回=</a>             =下一步=
+        &nbsp;
+</p>
+
+
+<p class="navigation levels">
+<i><a name="1">层  5</a>
+    </i>
+ &nbsp;&nbsp;
+ 
+  <input onclick="document.location.href='level1.html';" name="level[1]" value="层  1" class="button clickable" type="button"> <input onclick="document.location.href='level2.html';" name="level[2]" value="层  2" class="button clickable" type="button"> <input onclick="document.location.href='level3.html';" name="level[3]" value="层  3" class="button clickable" type="button"> <input onclick="document.location.href='level4.html';" name="level[4]" value="层  4" class="button clickable" type="button"> <input name="disabled" value="层  5" class="button_disabled" type="button"></p>
+
+
+ </td>
+ </tr>
+</tbody></table>
+
+    
+        
+ 
+<a name="end"></a>
+<p>
+ <input onclick="document.location.href='../index.html';" name="overview" value="摘要" class="button clickable" type="button"> <input onclick="document.location.href='statistics.html';" name="stats[0]" value="统计表" class="button clickable" type="button"> <input onclick="document.location.href='items.html';" name="items[0]" value="获得物品" class="button clickable" type="button"> <input name="disabled" value="详细资料" class="button_disabled" type="button"></p>
+
+
+</div>          </form>
+</body>
+</html>
