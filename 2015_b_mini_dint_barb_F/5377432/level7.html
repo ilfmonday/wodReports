@@ -1,0 +1,682 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+
+<meta http-equiv="Content-Language" content="cn">
+
+<link rel="SHORTCUT ICON" href="http://info.world-of-dungeons.org/wod/css/WOD.gif" type="image/gif">
+    
+	<title>20150228_b_mini_dint_barb</title>
+	<link rel="stylesheet" type="text/css" href="http://bertous.world-of-dungeons.org/wod/css/layout.css?1422818526">
+
+    <link rel="stylesheet" type="text/css" href="http://bertous.world-of-dungeons.org/wod/css//skins/skin-3/skin-cn.css?1422818526">
+    
+
+<script type="text/javascript" src="http://bertous.world-of-dungeons.org/wod/javascript/wod_standard.js?1422818526"></script>
+<script type="text/javascript" src="http://bertous.world-of-dungeons.org/wod/javascript/wodtooltip.js?1422818526"></script>
+
+
+
+
+
+
+
+
+        
+    <style type="text/css">
+/*<![CDATA[*/
+      .tableMinWidthRespectingContent {
+        width:1px;
+        }
+        .tableMinHeightRespectingContent {
+        height:1px;
+        }
+/*]]>*/
+    </style>
+  <script type="text/javascript">window.onload = function(e){wodToolTipInit();wodInitialize('bertous.world-of-dungeons.org','','/wod/spiel/','/wod/ajax/','WOD','cn','/wod/css//skins/skin-3/','/wod/css/','1','1');}
+function o(t,n){ 
+ var url="http://bertous.world-of-dungeons.org/wod/spiel/";
+if(t=="n"){url += "help/npc"}
+if(t=="s"){url += "hero/skill"}
+if(t=="i"){url += "hero/item"}
+return wo(url + ".php?name=" + n + "&IS_POPUP=1");}
+var CTable=function(){};
+CTable.GetNumber = function (cell) {
+		var numberPatten = /^\s?([\d]+\.?[\d]*)\s?_?\s?([\d]*\.?[\d]*)\s?$/;
+		var pairTable = cell.firstChild;
+		var numberString = cell.textContent;
+		var numbers;
+		if(pairTable && pairTable.nodeName == "TABLE")
+		{
+			numberString = pairTable.id;
+		}
+		if(numberPatten.test(numberString))
+		{
+			numbers = [];
+			var numberres = numberPatten.exec(numberString);
+			if(numberres[1])
+				numbers.push(numberres[1]);
+			if(numberres[2])
+				numbers.push(numberres[2]);
+		}
+		return numbers;
+	}
+CompareString = function CompareString(a, b) {
+        a = a || "";
+        b = b || "";
+        return a.toLowerCase().localeCompare(b.toLowerCase(),"zh-CN-u-co-pinyin");
+    }
+ct = function (Id) {
+        try {
+            var Table = document.getElementById(Id);
+            if (Table.hasAttribute("hide")) {
+                Table.removeAttribute("hide");
+            } else {
+                Table.setAttribute("hide", "hide");
+            }
+        } catch (e) {
+            alert("CTable.OnClickTitle(): " + e);
+        }
+    }
+cf = function (tableId,filterRowId) {
+		try {
+            var Table = document.getElementById(tableId);
+			var filterRow = document.getElementById(filterRowId);
+			var stringfilters = [];
+			var orgstringfilters = [];
+			var numberfilters = [];
+			var filterString = "";
+			var showIds = [];
+			var refilter = 0;
+			
+			var showHero_0 = document.getElementById(tableId + "_checkbox_0_0");
+			var showHero_1 = document.getElementById(tableId + "_checkbox_0_1");
+			var showHero = [showHero_0.checked,showHero_1.checked];
+			
+			for(var i = 0; i< filterRow.cells.length; i++)
+			{
+				var cell = filterRow.cells[i];
+				var stringfilter = document.getElementById(filterRow.id + "_combobox_" + i);
+				var orgstringfilter = document.getElementById('org_' + filterRow.id + "_combobox_" + i);
+				var numberfilter = document.getElementById(filterRow.id + "_textbox_" + i);
+				if(stringfilter){
+					stringfilters.push(stringfilter.value);
+					refilter += stringfilter.selectedIndex > 0?1:0;
+				}
+				else
+					stringfilters.push(null);
+				if(orgstringfilter){
+					for(var ii = 0, ij = orgstringfilter.options.length; ii < ij; ++ii) {
+						if(orgstringfilter.options[ii].value === stringfilter.value) {
+						   orgstringfilter.selectedIndex = ii;
+						   break;
+						}
+					}
+					orgstringfilters.push([stringfilter,orgstringfilter]);
+					showIds.push([]);
+				}
+				if(numberfilter)
+					numberfilters.push(numberfilter.value);
+				else
+					numberfilters.push(null);
+			}
+			var index = 0;
+			var patten = /([\(|\[|>|<|=|]*)\s*([\d]*\.?[\d]*)\s*-?\s*([\d]*\.?[\d]*)\s*([\)|\]|\s]?)/;
+			for(var i = 2;i< Table.rows.length;i=i+2)
+			{
+				var row = Table.rows[i];
+				var rowInfo = Table.rows[i+1];
+				var rowIds = row.id.split(",");
+				var show = true;
+				
+				var hero = row.cells[0].getElementsByTagName('a')[0];
+				var heroKind = hero.getAttribute("kind");
+				show = showHero[heroKind];
+				if(show)
+				{
+					for(var fi =0; fi<stringfilters.length;fi++)
+					{
+						var sfilter = stringfilters[fi];
+						if(!sfilter)
+							continue;
+						if(sfilter != fi + "_all" && sfilter != rowIds[fi])
+						{
+							show = false;
+							break;
+						}
+					}
+				}
+				if(show)
+				{
+					for(fi=0;fi<numberfilters.length;fi++)
+					{
+						var nfilter = numberfilters[fi];
+						
+						if(!nfilter)
+							continue;
+						else 
+						{
+							var numbers = CTable.GetNumber(row.cells[fi]);
+							var nfilters = nfilter.split(/\s*[,|，]\s*/);
+							for(ni = 0; ni < numbers.length; ni++)
+							{
+								var theFilter = nfilters[ni];
+								var testString = "";
+								if(theFilter && patten.test(theFilter))
+								{
+									var	op = "==";
+									var res = patten.exec(theFilter);
+									if(res[1])
+									{
+										op = res[1];
+										if(res[3])
+										if( op == "[") op = ">=";
+										if( op == "(") op = ">";
+										if( op == "=") op = "==";
+									}
+									else
+									{
+										if(res[3])
+											op = ">=";
+									}
+									testString = numbers[ni] + op + res[2];
+									if(res[3])
+									{
+										op = "<=";
+										if(res[4])
+										{
+											op = res[4]
+											if( op == "]") op = "<=";
+											if( op == ")") op = "<";
+										}
+										testString += " && " + numbers[ni] + op + res[3];
+									}
+									show = eval(testString);
+									if(!show)
+										break;
+								}
+							}
+						}
+						if(!show)
+							break;
+					}
+				}
+				row.style.display = show? '':'none';
+				rowInfo.style.display = show? rowInfo.style.display:'none';
+				if(show)
+				{
+					row.className = "row" + index % 2;
+					rowInfo.className = row.className;
+					index++;
+					for(var fi =0; fi<orgstringfilters.length;fi++)
+					{
+						var id = rowIds[fi];
+						if(showIds[fi].indexOf(id) <= -1)
+							showIds[fi].push(id);
+					}
+				}
+			}
+			
+			if(orgstringfilters.length - refilter > 1)
+			{
+				for(var fi =0; fi<orgstringfilters.length;fi++)
+				{
+					var sfilter = orgstringfilters[fi][0];
+					var sfilterorg = orgstringfilters[fi][1];
+					if(!sfilter)
+						continue;
+					if(refilter == 1 && sfilter.selectedIndex > 0)
+						continue;
+					for(var i = sfilter.options.length -1; i>0;i--)
+						sfilter.remove(i);
+					for(var i = 0; i< sfilterorg.options.length; i++){
+						var opt = sfilterorg.options[i];
+						if(showIds[fi].indexOf(opt.value) > -1){
+							var newopt = new Option(opt.text,opt.value);
+							newopt.selected = opt.selected;
+							sfilter.add(newopt);
+						}
+					}
+				}
+			}			
+        } catch (e) {
+            alert("CTable.OnChangeFilter(): " + e);
+        }
+    }
+co = function (tableId,columnIndex,numberIndex) {
+		var Table = document.getElementById(tableId);
+		var index = numberIndex;
+		var ths = Table.getElementsByTagName("th");
+		if(index == null)
+			index = 0;
+		var th = ths[columnIndex];
+		var order = th.getAttribute("order");
+		for(var i=0; i< ths.length - 1; i++)
+		{
+			
+			var span = document.getElementById(tableId + '_orderInfo_' + i);
+			var spans = span.getElementsByTagName('span');
+			if(spans && spans.length ==2)
+			{
+				spans[0].innerHTML = '';
+				spans[1].innerHTML = '';
+				if(i == columnIndex)
+					spans[numberIndex].innerHTML = order>0?'&#9650;':'&#9660;';
+			}
+		}
+		for(var i = 2;i< Table.rows.length-2;i=i+2)
+		{
+			for(var j = i+2;j< Table.rows.length;j=j+2)
+			{
+				var row_1 = Table.rows[i];
+				var row_1_info = Table.rows[i+1];
+				var row_2 = Table.rows[j];
+				var row_2_info = Table.rows[j+1];
+				var cell_1 = row_1.cells[columnIndex];
+				var cell_2 = row_2.cells[columnIndex];
+				
+				n1 = CTable.GetNumber(cell_1);
+				n2 = CTable.GetNumber(cell_2);
+				var change = false;
+
+				if(columnIndex == ths.length -1)
+				{
+					var n1 = Number(row_1.getAttribute("oriorder"));
+					var n2 = Number(row_2.getAttribute("oriorder"));
+					change = n1>n2;
+				}
+				else
+				{
+					var c1 = row_1.cells[0].firstChild.className.replace("my","");
+					var c2 = row_2.cells[0].firstChild.className.replace("my","");
+					var s1 = cell_1.textContent;
+					var s2 = cell_2.textContent;
+					var cc = CompareString(c1,c2);
+					if(cc < 0)
+						change = false;
+					else if(cc > 0)
+						change = true;
+					else 
+					{
+						if(n1 && n2 && n1.length > 0 && n2.length > 0)
+						{
+							var number_1 = n1[index] * order;
+							var number_2 = n2[index] * order;
+							change = number_1 > number_2;
+						}
+						else
+							change = (CompareString(s1,s2) == order);
+					}
+				}
+				
+				if(change)
+				{
+					row_2.parentNode.insertBefore(row_2,row_1);
+					row_2_info.parentNode.insertBefore(row_2_info,row_1);
+				}
+			}			
+			Table.rows[i].className = "row" + (i/2) % 2;
+			Table.rows[i+1].className = Table.rows[i].className;
+		}
+		th.setAttribute("order",-1*order);
+	}
+sd = function (rowid,activeRows)
+	{
+		var row = document.getElementById(rowid);
+		var cell = row.cells[0];
+		var button = row.previousSibling.getElementsByTagName('input')[0];
+		activeRows = activeRows||[];
+		if(cell)
+		{
+			if(row.style.display == '')
+			{
+				button.value = '显示';
+				row.style.display = 'none';
+			}
+			else
+			{
+				button.value = '隐藏';
+				row.style.display = '';
+			}
+			var table = cell.getElementsByTagName('table')[0];
+			if(table.rows.length <= 1)
+			{
+				if(activeRows.length > 0)
+				{
+					debugger;
+					var ids = activeRows[0].split('_');
+					var level = Number(ids[1]);
+					var ac = table.insertRow(-1).insertCell(-1);
+					ac.colSpan = '3';
+					ac.innerHTML = '<hr/><br />层 ' + level + '<br /><hr/>';
+					for(var i = 0;i<activeRows.length;i++)
+					{
+						ids = activeRows[i].split('_');
+						var newlevel = Number(ids[1]);
+						if(newlevel != level)
+						{
+							ac = table.insertRow(-1).insertCell(-1);
+							ac.colSpan = '3';
+							ac.innerHTML = '<hr/><br />层 ' + newlevel + '<br /><hr/>';
+							level = newlevel;
+						}
+						var theRow = document.getElementById(activeRows[i]).cloneNode(true);
+						if(theRow)
+						{
+							table.appendChild(theRow);
+							var c = table.insertRow(-1).insertCell(-1);
+							c.colSpan = '3';
+							c.innerHTML = '<hr/>';
+						}
+					}
+				}
+			}			
+
+		}
+		
+	}
+st = function (id){
+		var statdiv = document.getElementById('stat_all');
+		var tabs = statdiv.getAttribute('tabs').split(',');
+		var showall = false;
+		var lishowall = document.getElementById('tab_showall');
+		var lihideall = document.getElementById('tab_hideall');
+		lishowall.className = 'not_selected';
+		lihideall.className = 'not_selected';
+		for(var i = 0; i< tabs.length;i++)
+		{
+			var tabid = tabs[i];
+			var tab = document.getElementById(tabid);
+			var li = document.getElementById('tab_' + tabid);
+			li.className = 'not_selected';
+			if(id == 'showall')
+			{
+				lishowall.className = 'selected';
+				tab.style.display = '';
+			}
+			else if (id == 'hideall')
+			{
+				lihideall.className = 'selected';
+				tab.style.display = 'none';
+			}
+			else
+			{
+				if(tabid == id)
+				{
+					tab.style.display = '';
+					li.className = 'selected';
+				}
+				else
+				{
+					tab.style.display = 'none';
+					li.className = 'not_selected';
+				}
+			}
+
+		}
+	}
+</script><style type="text/css">div.stat_all {font-size:14px;} div.stat_header {margin:1em auto 0.5em auto;} span.stat_title {margin: auto 1em auto 0em; font-size:20px; font-weight:bold; color:#FFF;} span.clickable {cursor:pointer;} span.pair_value {width:100%; font-size:12px;} span.pair_value span {width:50%; min-width:3em; text-align:right; color:#F8A400;} span.pair_value span + span {color:#00CC00;} table.pair_hero {width:100%; font-size:12px;} table.pair_hero td {width:50%; min-width:3em; text-align:right; color:#00CC00;} table.pair_hero td + td {color:#F8A400;} table[hide] {display:none;} table.pair_value {width:100%;} table.pair_value td {width:50%; min-width:3em; text-align:right; color:#F8A400;} table.pair_value td + td {color:#00CC00;} </style>
+</head>
+<body>
+<form action="/wod/spiel//dungeon/report.php?session_hero_id=96668&amp;is_popup=1" name="the_form" accept-charset="UTF-8" method="post"> <input name="session_hero_id" value="96668" type="hidden"><input name="wod_post_id" value="a0eiwhyusu34fc06i96zi9383t7gese4" type="hidden"><input name="wod_post_world" value="CB" type="hidden"><input name="IS_POPUP" value="1" type="hidden"><input name="pay_from_group_cash_box" value="0" type="hidden">
+<input name="put_purchases_to" value="go_lager" type="hidden">
+
+
+          <div style="height: 100%">
+
+<input name="cur_rep_id" value="5377432" type="hidden">
+<input name="report_id[0]" value="5377432" type="hidden">
+<input name="nr" value="" type="hidden">
+
+<input name="current_level" value="7" type="hidden">
+
+
+<h1>战报: <i>eva</i></h1>
+
+<p>
+ <input onclick="document.location.href='../index.html';" name="overview" value="摘要" class="button clickable" type="button"> <input onclick="document.location.href='statistics.html';" name="stats[0]" value="统计表" class="button clickable" type="button"> <input onclick="document.location.href='items.html';" name="items[0]" value="获得物品" class="button clickable" type="button"> <input name="disabled" value="详细资料" class="button_disabled" type="button"></p>
+
+
+
+<div tabs="stat_ini,stat_attack,stat_defence,stat_damage,stat_damaged,stat_buff,stat_buffed" class="stat_all tab" id="stat_all"><ul><li class="selected" id="tab_stat_ini"><a onclick="st('stat_ini');" href="#">先攻权</a></li><li class="not_selected" id="tab_stat_attack"><a onclick="st('stat_attack');" href="#">攻击骰</a></li><li class="not_selected" id="tab_stat_defence"><a onclick="st('stat_defence');" href="#">防御骰</a></li><li class="not_selected" id="tab_stat_damage"><a onclick="st('stat_damage');" href="#">造成伤害</a></li><li class="not_selected" id="tab_stat_damaged"><a onclick="st('stat_damaged');" href="#">受到伤害</a></li><li class="not_selected" id="tab_stat_buff"><a onclick="st('stat_buff');" href="#">给予增益</a></li><li class="not_selected" id="tab_stat_buffed"><a onclick="st('stat_buffed');" href="#">接受增益</a></li><li id="tab_showall" class="not_selected"><a onclick="st('showall');" href="#" id="show_all_a">全部显示</a></li><li id="tab_hideall" class="not_selected"><a onclick="st('hideall');" href="#" id="show_all_a">全部隐藏</a></li></ul><div class="bar" id="stat_bar"></div><div class="content" id="stat_ini"><div style="text-align: center;" class="stat_header"><span onclick="ct('table_stat_ini');" class="stat_title clickable">先攻权</span></div><table id="table_stat_ini" style="margin: 0px auto;" class="content_table"><tbody><tr class="content_table_header"><th order="-1" id="th_stat_ini0" class="content_table stat_order"><span id="stat_ini_col0">人物<span class="pair_hero" id="table_stat_ini_orderInfo_0"><span></span><span></span></span></span><table class="pair_hero"><tbody><tr><td><input onclick="cf('table_stat_ini','filter_stat_ini');" id="table_stat_ini_checkbox_0_0" value="0" type="checkbox">英雄</td><td><input onclick="cf('table_stat_ini','filter_stat_ini');" id="table_stat_ini_checkbox_0_1" value="1" type="checkbox">对手</td></tr></tbody></table></th><th order="-1" id="th_stat_ini1" class="content_table stat_order"><span onclick="co('table_stat_ini',1,0);" class="clickable" id="stat_ini_col1">平均值<span id="table_stat_ini_orderInfo_1"><span></span><span></span></span></span></th><th order="-1" id="th_stat_ini2" class="content_table stat_order"><span onclick="co('table_stat_ini',2,0);" class="clickable" id="stat_ini_col2">次数<span id="table_stat_ini_orderInfo_2"><span></span><span></span></span></span></th><th order="-1" id="th_stat_ini3" class="content_table stat_order"><span onclick="co('table_stat_ini',3,0);" class="clickable" id="stat_ini_col3">Max值<span id="table_stat_ini_orderInfo_3"><span></span><span></span></span></span></th><th order="-1" id="th_stat_ini4" class="content_table stat_order"><span onclick="co('table_stat_ini',4,0);" class="clickable" id="stat_ini_col4">Min值<span id="table_stat_ini_orderInfo_4"><span></span><span></span></span></span></th><th order="-1" id="th_stat_ini5" class="content_table stat_order"><span onclick="co('table_stat_ini',5,0);" class="clickable" id="stat_ini_col5">STD值<span id="table_stat_ini_orderInfo_5"><span></span><span></span></span></span></th><th order="-1" id="th_stat_ini6" class="content_table stat_order"><span onclick="co('table_stat_ini',6,0);" class="clickable" id="stat_ini_col6">数值列表<span id="table_stat_ini_orderInfo_6"><span></span><span></span></span></span></th></tr><tr class="content_table_filter_row" id="filter_stat_ini"><td><select onchange="cf('table_stat_ini','filter_stat_ini');" id="filter_stat_ini_combobox_0"><option value="0_all">全部</option><option value="0_0">æ¸šã‚«ãƒ²ãƒ«</option><option value="0_1">城墙上的法师守卫</option></select><select style="display: none;" onchange="cf('table_stat_ini','filter_stat_ini');" id="org_filter_stat_ini_combobox_0"><option value="0_all">全部</option><option value="0_0">æ¸šã‚«ãƒ²ãƒ«</option><option value="0_1">城墙上的法师守卫</option></select></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td style="text-align: center;"><input onclick="cf('table_stat_ini','filter_stat_ini');" class="button" value="查询" id="filter_stat_ini_button" type="button"></td></tr><tr id="0_0,1_-1,2_-1,3_-1,4_-1,5_-1,6_-1" oriorder="0" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_myhero" kind="0" onclick="return jump('h',96668)" href="#">æ¸šã‚«ãƒ²ãƒ«</a></td><td style="text-align: right;" class="content_table">174.00</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: right;" class="content_table">174</td><td style="text-align: right;" class="content_table">174</td><td style="text-align: right;" class="content_table">0</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_ini_0',['activeRow_7_1_0_3']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_ini_0" class="row0"><td colspan="7"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"><span>174</span></td></tr></tbody></table></td></tr><tr id="0_1,1_-1,2_-1,3_-1,4_-1,5_-1,6_-1" oriorder="1" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_monster" kind="1" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');" href="#">城墙上的法师守卫</a></td><td style="text-align: right;" class="content_table">41.00</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: right;" class="content_table">41</td><td style="text-align: right;" class="content_table">41</td><td style="text-align: right;" class="content_table">0</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_ini_1',['activeRow_7_1_0_7']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_ini_1" class="row1"><td colspan="7"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"><span>41</span></td></tr></tbody></table></td></tr></tbody></table></div><div style="display: none;" class="content" id="stat_attack"><div style="text-align: center;" class="stat_header"><span onclick="ct('table_stat_attack');" class="stat_title clickable">攻击骰</span></div><table id="table_stat_attack" style="margin: 0px auto;" class="content_table"><tbody><tr class="content_table_header"><th order="-1" id="th_stat_attack0" class="content_table stat_order"><span id="stat_attack_col0">人物<span class="pair_hero" id="table_stat_attack_orderInfo_0"><span></span><span></span></span></span><table class="pair_hero"><tbody><tr><td><input onclick="cf('table_stat_attack','filter_stat_attack');" id="table_stat_attack_checkbox_0_0" value="0" type="checkbox">英雄</td><td><input onclick="cf('table_stat_attack','filter_stat_attack');" id="table_stat_attack_checkbox_0_1" value="1" type="checkbox">对手</td></tr></tbody></table></th><th order="-1" id="th_stat_attack1" class="content_table stat_order"><span onclick="co('table_stat_attack',1,0);" class="clickable" id="stat_attack_col1">攻击类型<span id="table_stat_attack_orderInfo_1"><span></span><span></span></span></span></th><th order="-1" id="th_stat_attack2" class="content_table stat_order"><span onclick="co('table_stat_attack',2,0);" class="clickable" id="stat_attack_col2">技能<span id="table_stat_attack_orderInfo_2"><span></span><span></span></span></span></th><th order="-1" id="th_stat_attack3" class="content_table stat_order"><span onclick="co('table_stat_attack',3,0);" class="clickable" id="stat_attack_col3">物品<span id="table_stat_attack_orderInfo_3"><span></span><span></span></span></span></th><th order="-1" id="th_stat_attack4" class="content_table stat_order"><span onclick="co('table_stat_attack',4,0);" class="clickable" id="stat_attack_col4">位置<span id="table_stat_attack_orderInfo_4"><span></span><span></span></span></span></th><th order="-1" id="th_stat_attack5" class="content_table stat_order"><span onclick="co('table_stat_attack',5,0);" class="clickable" id="stat_attack_col5">平均值<span id="table_stat_attack_orderInfo_5"><span></span><span></span></span></span></th><th order="-1" id="th_stat_attack6" class="content_table stat_order"><span onclick="co('table_stat_attack',6,0);" class="clickable" id="stat_attack_col6">次数<span id="table_stat_attack_orderInfo_6"><span></span><span></span></span></span></th><th order="-1" id="th_stat_attack7" class="content_table stat_order"><span onclick="co('table_stat_attack',7,0);" class="clickable" id="stat_attack_col7">Max值<span id="table_stat_attack_orderInfo_7"><span></span><span></span></span></span></th><th order="-1" id="th_stat_attack8" class="content_table stat_order"><span onclick="co('table_stat_attack',8,0);" class="clickable" id="stat_attack_col8">Min值<span id="table_stat_attack_orderInfo_8"><span></span><span></span></span></span></th><th order="-1" id="th_stat_attack9" class="content_table stat_order"><span onclick="co('table_stat_attack',9,0);" class="clickable" id="stat_attack_col9">STD值<span id="table_stat_attack_orderInfo_9"><span></span><span></span></span></span></th><th order="-1" id="th_stat_attack10" class="content_table stat_order"><span onclick="co('table_stat_attack',10,0);" class="clickable" id="stat_attack_col10">数值列表<span id="table_stat_attack_orderInfo_10"><span></span><span></span></span></span></th></tr><tr class="content_table_filter_row" id="filter_stat_attack"><td><select onchange="cf('table_stat_attack','filter_stat_attack');" id="filter_stat_attack_combobox_0"><option value="0_all">全部</option><option value="0_0">æ¸šã‚«ãƒ²ãƒ«</option></select><select style="display: none;" onchange="cf('table_stat_attack','filter_stat_attack');" id="org_filter_stat_attack_combobox_0"><option value="0_all">全部</option><option value="0_0">æ¸šã‚«ãƒ²ãƒ«</option></select></td><td><select onchange="cf('table_stat_attack','filter_stat_attack');" id="filter_stat_attack_combobox_1"><option value="1_all">全部</option><option value="1_0">远程</option></select><select style="display: none;" onchange="cf('table_stat_attack','filter_stat_attack');" id="org_filter_stat_attack_combobox_1"><option value="1_all">全部</option><option value="1_0">远程</option></select></td><td><select onchange="cf('table_stat_attack','filter_stat_attack');" id="filter_stat_attack_combobox_2"><option value="2_all">全部</option><option value="2_0">投掷武器攻击</option></select><select style="display: none;" onchange="cf('table_stat_attack','filter_stat_attack');" id="org_filter_stat_attack_combobox_2"><option value="2_all">全部</option><option value="2_0">投掷武器攻击</option></select></td><td><select onchange="cf('table_stat_attack','filter_stat_attack');" id="filter_stat_attack_combobox_3"><option value="3_all">全部</option><option value="3_0">布林达萨斯的蝉翼飞刀</option><option value="3_1">回力棒</option></select><select style="display: none;" onchange="cf('table_stat_attack','filter_stat_attack');" id="org_filter_stat_attack_combobox_3"><option value="3_all">全部</option><option value="3_0">布林达萨斯的蝉翼飞刀</option><option value="3_1">回力棒</option></select></td><td><select onchange="cf('table_stat_attack','filter_stat_attack');" id="filter_stat_attack_combobox_4"><option value="4_all">全部</option><option value="4_0"></option></select><select style="display: none;" onchange="cf('table_stat_attack','filter_stat_attack');" id="org_filter_stat_attack_combobox_4"><option value="4_all">全部</option><option value="4_0"></option></select></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td style="text-align: center;"><input onclick="cf('table_stat_attack','filter_stat_attack');" class="button" value="查询" id="filter_stat_attack_button" type="button"></td></tr><tr id="0_0,1_0,2_0,3_0,4_0,5_-1,6_-1,7_-1,8_-1,9_-1,10_-1" oriorder="0" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_myhero" kind="0" onclick="return jump('h',96668)" href="#">æ¸šã‚«ãƒ²ãƒ«</a></td><td style="text-align: left;" class="content_table">远程</td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E6%8A%95%E6%8E%B7%E6%AD%A6%E5%99%A8%E6%94%BB%E5%87%BB');" href="#">投掷武器攻击</a></td><td style="text-align: left;" class="content_table"><span><a class="report  rep_uni item_unique" kind="-1" onclick="return o('i','%E5%B8%83%E6%9E%97%E8%BE%BE%E8%90%A8%E6%96%AF%E7%9A%84%E8%9D%89%E7%BF%BC%E9%A3%9E%E5%88%80');" href="#">布林达萨斯的蝉翼飞刀</a></span></td><td style="text-align: left;" class="content_table"></td><td style="text-align: right;" class="content_table">243.00</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: right;" class="content_table">243</td><td style="text-align: right;" class="content_table">243</td><td style="text-align: right;" class="content_table">0</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_attack_0',['activeRow_7_1_0_4']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_attack_0" class="row0"><td colspan="11"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"><span>243</span></td></tr></tbody></table></td></tr><tr id="0_0,1_0,2_0,3_1,4_0,5_-1,6_-1,7_-1,8_-1,9_-1,10_-1" oriorder="1" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_myhero" kind="0" onclick="return jump('h',96668)" href="#">æ¸šã‚«ãƒ²ãƒ«</a></td><td style="text-align: left;" class="content_table">远程</td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E6%8A%95%E6%8E%B7%E6%AD%A6%E5%99%A8%E6%94%BB%E5%87%BB');" href="#">投掷武器攻击</a></td><td style="text-align: left;" class="content_table"><span><a class="report  rep_uni item_unique" kind="-1" onclick="return o('i','%E5%9B%9E%E5%8A%9B%E6%A3%92');" href="#">回力棒</a></span></td><td style="text-align: left;" class="content_table"></td><td style="text-align: right;" class="content_table">110.00</td><td style="text-align: right;" class="content_table">2</td><td style="text-align: right;" class="content_table">124</td><td style="text-align: right;" class="content_table">96</td><td style="text-align: right;" class="content_table">19.8</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_attack_1',['activeRow_7_1_0_5','activeRow_7_1_0_6']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_attack_1" class="row1"><td colspan="11"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"><span>124, 96</span></td></tr></tbody></table></td></tr></tbody></table></div><div style="display: none;" class="content" id="stat_defence"><div style="text-align: center;" class="stat_header"><span onclick="ct('table_stat_defence');" class="stat_title clickable">防御骰</span></div><table id="table_stat_defence" style="margin: 0px auto;" class="content_table"><tbody><tr class="content_table_header"><th order="-1" id="th_stat_defence0" class="content_table stat_order"><span id="stat_defence_col0">人物<span class="pair_hero" id="table_stat_defence_orderInfo_0"><span></span><span></span></span></span><table class="pair_hero"><tbody><tr><td><input onclick="cf('table_stat_defence','filter_stat_defence');" id="table_stat_defence_checkbox_0_0" value="0" type="checkbox">英雄</td><td><input onclick="cf('table_stat_defence','filter_stat_defence');" id="table_stat_defence_checkbox_0_1" value="1" type="checkbox">对手</td></tr></tbody></table></th><th order="-1" id="th_stat_defence1" class="content_table stat_order"><span onclick="co('table_stat_defence',1,0);" class="clickable" id="stat_defence_col1">防御类型<span id="table_stat_defence_orderInfo_1"><span></span><span></span></span></span></th><th order="-1" id="th_stat_defence2" class="content_table stat_order"><span onclick="co('table_stat_defence',2,0);" class="clickable" id="stat_defence_col2">技能<span id="table_stat_defence_orderInfo_2"><span></span><span></span></span></span></th><th order="-1" id="th_stat_defence3" class="content_table stat_order"><span onclick="co('table_stat_defence',3,0);" class="clickable" id="stat_defence_col3">物品<span id="table_stat_defence_orderInfo_3"><span></span><span></span></span></span></th><th order="-1" id="th_stat_defence4" class="content_table stat_order"><span onclick="co('table_stat_defence',4,0);" class="clickable" id="stat_defence_col4">平均值<span id="table_stat_defence_orderInfo_4"><span></span><span></span></span></span></th><th order="-1" id="th_stat_defence5" class="content_table stat_order"><span onclick="co('table_stat_defence',5,0);" class="clickable" id="stat_defence_col5">次数<span id="table_stat_defence_orderInfo_5"><span></span><span></span></span></span></th><th order="-1" id="th_stat_defence6" class="content_table stat_order"><span onclick="co('table_stat_defence',6,0);" class="clickable" id="stat_defence_col6">Max值<span id="table_stat_defence_orderInfo_6"><span></span><span></span></span></span></th><th order="-1" id="th_stat_defence7" class="content_table stat_order"><span onclick="co('table_stat_defence',7,0);" class="clickable" id="stat_defence_col7">Min值<span id="table_stat_defence_orderInfo_7"><span></span><span></span></span></span></th><th order="-1" id="th_stat_defence8" class="content_table stat_order"><span onclick="co('table_stat_defence',8,0);" class="clickable" id="stat_defence_col8">STD值<span id="table_stat_defence_orderInfo_8"><span></span><span></span></span></span></th><th order="-1" id="th_stat_defence9" class="content_table stat_order"><span onclick="co('table_stat_defence',9,0);" class="clickable" id="stat_defence_col9">数值列表<span id="table_stat_defence_orderInfo_9"><span></span><span></span></span></span></th></tr><tr class="content_table_filter_row" id="filter_stat_defence"><td><select onchange="cf('table_stat_defence','filter_stat_defence');" id="filter_stat_defence_combobox_0"><option value="0_all">全部</option><option value="0_0">城墙上的法师守卫</option></select><select style="display: none;" onchange="cf('table_stat_defence','filter_stat_defence');" id="org_filter_stat_defence_combobox_0"><option value="0_all">全部</option><option value="0_0">城墙上的法师守卫</option></select></td><td><select onchange="cf('table_stat_defence','filter_stat_defence');" id="filter_stat_defence_combobox_1"><option value="1_all">全部</option><option value="1_0">远程</option></select><select style="display: none;" onchange="cf('table_stat_defence','filter_stat_defence');" id="org_filter_stat_defence_combobox_1"><option value="1_all">全部</option><option value="1_0">远程</option></select></td><td><select onchange="cf('table_stat_defence','filter_stat_defence');" id="filter_stat_defence_combobox_2"><option value="2_all">全部</option><option value="2_0">远程回避</option></select><select style="display: none;" onchange="cf('table_stat_defence','filter_stat_defence');" id="org_filter_stat_defence_combobox_2"><option value="2_all">全部</option><option value="2_0">远程回避</option></select></td><td><select onchange="cf('table_stat_defence','filter_stat_defence');" id="filter_stat_defence_combobox_3"><option value="3_all">全部</option><option value="3_0"></option></select><select style="display: none;" onchange="cf('table_stat_defence','filter_stat_defence');" id="org_filter_stat_defence_combobox_3"><option value="3_all">全部</option><option value="3_0"></option></select></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td style="text-align: center;"><input onclick="cf('table_stat_defence','filter_stat_defence');" class="button" value="查询" id="filter_stat_defence_button" type="button"></td></tr><tr id="0_0,1_0,2_0,3_0,4_-1,5_-1,6_-1,7_-1,8_-1,9_-1" oriorder="0" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_monster" kind="1" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');" href="#">城墙上的法师守卫</a></td><td style="text-align: left;" class="content_table">远程</td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E8%BF%9C%E7%A8%8B%E5%9B%9E%E9%81%BF');" href="#">远程回避</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: right;" class="content_table">165.33</td><td style="text-align: right;" class="content_table">3</td><td style="text-align: right;" class="content_table">205</td><td style="text-align: right;" class="content_table">133</td><td style="text-align: right;" class="content_table">36.56</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_defence_0',['activeRow_7_1_0_4','activeRow_7_1_0_5','activeRow_7_1_0_6']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_defence_0" class="row0"><td colspan="10"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"><span>205, 158, 133</span></td></tr></tbody></table></td></tr></tbody></table></div><div style="display: none;" class="content" id="stat_damage"><div style="text-align: center;" class="stat_header"><span onclick="ct('table_stat_damage');" class="stat_title clickable">造成伤害</span></div><table id="table_stat_damage" style="margin: 0px auto;" class="content_table"><tbody><tr class="content_table_header"><th order="-1" id="th_stat_damage0" class="content_table stat_order"><span id="stat_damage_col0">人物<span class="pair_hero" id="table_stat_damage_orderInfo_0"><span></span><span></span></span></span><table class="pair_hero"><tbody><tr><td><input onclick="cf('table_stat_damage','filter_stat_damage');" id="table_stat_damage_checkbox_0_0" value="0" type="checkbox">英雄</td><td><input onclick="cf('table_stat_damage','filter_stat_damage');" id="table_stat_damage_checkbox_0_1" value="1" type="checkbox">对手</td></tr></tbody></table></th><th order="-1" id="th_stat_damage1" class="content_table stat_order"><span onclick="co('table_stat_damage',1,0);" class="clickable" id="stat_damage_col1">攻击类型<span id="table_stat_damage_orderInfo_1"><span></span><span></span></span></span></th><th order="-1" id="th_stat_damage2" class="content_table stat_order"><span onclick="co('table_stat_damage',2,0);" class="clickable" id="stat_damage_col2">技能<span id="table_stat_damage_orderInfo_2"><span></span><span></span></span></span></th><th order="-1" id="th_stat_damage3" class="content_table stat_order"><span onclick="co('table_stat_damage',3,0);" class="clickable" id="stat_damage_col3">物品<span id="table_stat_damage_orderInfo_3"><span></span><span></span></span></span></th><th order="-1" id="th_stat_damage4" class="content_table stat_order"><span onclick="co('table_stat_damage',4,0);" class="clickable" id="stat_damage_col4">伤害类型<span id="table_stat_damage_orderInfo_4"><span></span><span></span></span></span></th><th order="-1" id="th_stat_damage5" class="content_table stat_order"><span id="stat_damage_col5">总数<span class="pair_value" id="table_stat_damage_orderInfo_5"><span></span><span></span></span><br><span class="pair_value"><span onclick="co('table_stat_damage',5,0);" class="clickable">ROLL点</span>&nbsp;&nbsp;<span onclick="co('table_stat_damage',5,1);" class="clickable">实际值</span></span></span></th><th order="-1" id="th_stat_damage6" class="content_table stat_order"><span id="stat_damage_col6">平均值<span class="pair_value" id="table_stat_damage_orderInfo_6"><span></span><span></span></span><br><span class="pair_value"><span onclick="co('table_stat_damage',6,0);" class="clickable">ROLL点</span>&nbsp;&nbsp;<span onclick="co('table_stat_damage',6,1);" class="clickable">实际值</span></span></span></th><th order="-1" id="th_stat_damage7" class="content_table stat_order"><span onclick="co('table_stat_damage',7,0);" class="clickable" id="stat_damage_col7">次数<span id="table_stat_damage_orderInfo_7"><span></span><span></span></span></span></th><th order="-1" id="th_stat_damage8" class="content_table stat_order"><span id="stat_damage_col8">Max值<span class="pair_value" id="table_stat_damage_orderInfo_8"><span></span><span></span></span><br><span class="pair_value"><span onclick="co('table_stat_damage',8,0);" class="clickable">ROLL点</span>&nbsp;&nbsp;<span onclick="co('table_stat_damage',8,1);" class="clickable">实际值</span></span></span></th><th order="-1" id="th_stat_damage9" class="content_table stat_order"><span id="stat_damage_col9">Min值<span class="pair_value" id="table_stat_damage_orderInfo_9"><span></span><span></span></span><br><span class="pair_value"><span onclick="co('table_stat_damage',9,0);" class="clickable">ROLL点</span>&nbsp;&nbsp;<span onclick="co('table_stat_damage',9,1);" class="clickable">实际值</span></span></span></th><th order="-1" id="th_stat_damage10" class="content_table stat_order"><span id="stat_damage_col10">STD值<span class="pair_value" id="table_stat_damage_orderInfo_10"><span></span><span></span></span><br><span class="pair_value"><span onclick="co('table_stat_damage',10,0);" class="clickable">ROLL点</span>&nbsp;&nbsp;<span onclick="co('table_stat_damage',10,1);" class="clickable">实际值</span></span></span></th><th order="-1" id="th_stat_damage11" class="content_table stat_order"><span onclick="co('table_stat_damage',11,0);" class="clickable" id="stat_damage_col11">数值列表<span id="table_stat_damage_orderInfo_11"><span></span><span></span></span></span></th></tr><tr class="content_table_filter_row" id="filter_stat_damage"><td><select onchange="cf('table_stat_damage','filter_stat_damage');" id="filter_stat_damage_combobox_0"><option value="0_all">全部</option><option value="0_0">æ¸šã‚«ãƒ²ãƒ«</option></select><select style="display: none;" onchange="cf('table_stat_damage','filter_stat_damage');" id="org_filter_stat_damage_combobox_0"><option value="0_all">全部</option><option value="0_0">æ¸šã‚«ãƒ²ãƒ«</option></select></td><td><select onchange="cf('table_stat_damage','filter_stat_damage');" id="filter_stat_damage_combobox_1"><option value="1_all">全部</option><option value="1_0">远程</option></select><select style="display: none;" onchange="cf('table_stat_damage','filter_stat_damage');" id="org_filter_stat_damage_combobox_1"><option value="1_all">全部</option><option value="1_0">远程</option></select></td><td><select onchange="cf('table_stat_damage','filter_stat_damage');" id="filter_stat_damage_combobox_2"><option value="2_all">全部</option><option value="2_0">投掷武器攻击</option></select><select style="display: none;" onchange="cf('table_stat_damage','filter_stat_damage');" id="org_filter_stat_damage_combobox_2"><option value="2_all">全部</option><option value="2_0">投掷武器攻击</option></select></td><td><select onchange="cf('table_stat_damage','filter_stat_damage');" id="filter_stat_damage_combobox_3"><option value="3_all">全部</option><option value="3_0">布林达萨斯的蝉翼飞刀</option></select><select style="display: none;" onchange="cf('table_stat_damage','filter_stat_damage');" id="org_filter_stat_damage_combobox_3"><option value="3_all">全部</option><option value="3_0">布林达萨斯的蝉翼飞刀</option></select></td><td><select onchange="cf('table_stat_damage','filter_stat_damage');" id="filter_stat_damage_combobox_4"><option value="4_all">全部</option><option value="4_0">穿刺</option><option value="4_1">酸性</option><option value="4_2">心灵</option></select><select style="display: none;" onchange="cf('table_stat_damage','filter_stat_damage');" id="org_filter_stat_damage_combobox_4"><option value="4_all">全部</option><option value="4_0">穿刺</option><option value="4_1">酸性</option><option value="4_2">心灵</option></select></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td style="text-align: center;"><input onclick="cf('table_stat_damage','filter_stat_damage');" class="button" value="查询" id="filter_stat_damage_button" type="button"></td></tr><tr id="0_0,1_0,2_0,3_0,4_0,5_-1,6_-1,7_-1,8_-1,9_-1,10_-1,11_-1" oriorder="0" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_myhero" kind="0" onclick="return jump('h',96668)" href="#">æ¸šã‚«ãƒ²ãƒ«</a></td><td style="text-align: left;" class="content_table">远程</td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E6%8A%95%E6%8E%B7%E6%AD%A6%E5%99%A8%E6%94%BB%E5%87%BB');" href="#">投掷武器攻击</a></td><td style="text-align: left;" class="content_table"><span><a class="report  rep_uni item_unique" kind="-1" onclick="return o('i','%E5%B8%83%E6%9E%97%E8%BE%BE%E8%90%A8%E6%96%AF%E7%9A%84%E8%9D%89%E7%BF%BC%E9%A3%9E%E5%88%80');" href="#">布林达萨斯的蝉翼飞刀</a></span></td><td style="text-align: left;" class="content_table">穿刺</td><td style="text-align: right;" class="content_table"><table id="3_0" class="pair_value"><tbody><tr><td>3</td><td>0</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="3_0" class="pair_value"><tbody><tr><td>3</td><td>0</td></tr></tbody></table></td><td style="text-align: right;" class="content_table">1</td><td style="text-align: right;" class="content_table"><table id="3_0" class="pair_value"><tbody><tr><td>3</td><td>0</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="3_0" class="pair_value"><tbody><tr><td>3</td><td>0</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="0_0" class="pair_value"><tbody><tr><td>0</td><td>0</td></tr></tbody></table></td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_damage_0',['activeRow_7_1_0_4']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_damage_0" class="row0"><td colspan="12"><table style="width: 100%;"><tbody><tr><td colspan="3" style="text-align: center;"><span class="pair_value"><span>3</span><span> [ 0 ]</span></span></td></tr></tbody></table></td></tr><tr id="0_0,1_0,2_0,3_0,4_1,5_-1,6_-1,7_-1,8_-1,9_-1,10_-1,11_-1" oriorder="1" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_myhero" kind="0" onclick="return jump('h',96668)" href="#">æ¸šã‚«ãƒ²ãƒ«</a></td><td style="text-align: left;" class="content_table">远程</td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E6%8A%95%E6%8E%B7%E6%AD%A6%E5%99%A8%E6%94%BB%E5%87%BB');" href="#">投掷武器攻击</a></td><td style="text-align: left;" class="content_table"><span><a class="report  rep_uni item_unique" kind="-1" onclick="return o('i','%E5%B8%83%E6%9E%97%E8%BE%BE%E8%90%A8%E6%96%AF%E7%9A%84%E8%9D%89%E7%BF%BC%E9%A3%9E%E5%88%80');" href="#">布林达萨斯的蝉翼飞刀</a></span></td><td style="text-align: left;" class="content_table">酸性</td><td style="text-align: right;" class="content_table"><table id="2_2" class="pair_value"><tbody><tr><td>2</td><td>2</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="2_2" class="pair_value"><tbody><tr><td>2</td><td>2</td></tr></tbody></table></td><td style="text-align: right;" class="content_table">1</td><td style="text-align: right;" class="content_table"><table id="2_2" class="pair_value"><tbody><tr><td>2</td><td>2</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="2_2" class="pair_value"><tbody><tr><td>2</td><td>2</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="0_0" class="pair_value"><tbody><tr><td>0</td><td>0</td></tr></tbody></table></td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_damage_1',['activeRow_7_1_0_4']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_damage_1" class="row1"><td colspan="12"><table style="width: 100%;"><tbody><tr><td colspan="3" style="text-align: center;"><span class="pair_value"><span>2</span><span> [ 2 ]</span></span></td></tr></tbody></table></td></tr><tr id="0_0,1_0,2_0,3_0,4_2,5_-1,6_-1,7_-1,8_-1,9_-1,10_-1,11_-1" oriorder="2" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_myhero" kind="0" onclick="return jump('h',96668)" href="#">æ¸šã‚«ãƒ²ãƒ«</a></td><td style="text-align: left;" class="content_table">远程</td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E6%8A%95%E6%8E%B7%E6%AD%A6%E5%99%A8%E6%94%BB%E5%87%BB');" href="#">投掷武器攻击</a></td><td style="text-align: left;" class="content_table"><span><a class="report  rep_uni item_unique" kind="-1" onclick="return o('i','%E5%B8%83%E6%9E%97%E8%BE%BE%E8%90%A8%E6%96%AF%E7%9A%84%E8%9D%89%E7%BF%BC%E9%A3%9E%E5%88%80');" href="#">布林达萨斯的蝉翼飞刀</a></span></td><td style="text-align: left;" class="content_table">心灵</td><td style="text-align: right;" class="content_table"><table id="41_41" class="pair_value"><tbody><tr><td>41</td><td>41</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="41_41" class="pair_value"><tbody><tr><td>41</td><td>41</td></tr></tbody></table></td><td style="text-align: right;" class="content_table">1</td><td style="text-align: right;" class="content_table"><table id="41_41" class="pair_value"><tbody><tr><td>41</td><td>41</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="41_41" class="pair_value"><tbody><tr><td>41</td><td>41</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="0_0" class="pair_value"><tbody><tr><td>0</td><td>0</td></tr></tbody></table></td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_damage_2',['activeRow_7_1_0_4']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_damage_2" class="row0"><td colspan="12"><table style="width: 100%;"><tbody><tr><td colspan="3" style="text-align: center;"><span class="pair_value"><span>41</span><span> [ 41 ]</span></span></td></tr></tbody></table></td></tr></tbody></table></div><div style="display: none;" class="content" id="stat_damaged"><div style="text-align: center;" class="stat_header"><span onclick="ct('table_stat_damaged');" class="stat_title clickable">受到伤害</span></div><table id="table_stat_damaged" style="margin: 0px auto;" class="content_table"><tbody><tr class="content_table_header"><th order="-1" id="th_stat_damaged0" class="content_table stat_order"><span id="stat_damaged_col0">人物<span class="pair_hero" id="table_stat_damaged_orderInfo_0"><span></span><span></span></span></span><table class="pair_hero"><tbody><tr><td><input onclick="cf('table_stat_damaged','filter_stat_damaged');" id="table_stat_damaged_checkbox_0_0" value="0" type="checkbox">英雄</td><td><input onclick="cf('table_stat_damaged','filter_stat_damaged');" id="table_stat_damaged_checkbox_0_1" value="1" type="checkbox">对手</td></tr></tbody></table></th><th order="-1" id="th_stat_damaged1" class="content_table stat_order"><span onclick="co('table_stat_damaged',1,0);" class="clickable" id="stat_damaged_col1">攻击类型<span id="table_stat_damaged_orderInfo_1"><span></span><span></span></span></span></th><th order="-1" id="th_stat_damaged2" class="content_table stat_order"><span onclick="co('table_stat_damaged',2,0);" class="clickable" id="stat_damaged_col2">技能<span id="table_stat_damaged_orderInfo_2"><span></span><span></span></span></span></th><th order="-1" id="th_stat_damaged3" class="content_table stat_order"><span onclick="co('table_stat_damaged',3,0);" class="clickable" id="stat_damaged_col3">物品<span id="table_stat_damaged_orderInfo_3"><span></span><span></span></span></span></th><th order="-1" id="th_stat_damaged4" class="content_table stat_order"><span onclick="co('table_stat_damaged',4,0);" class="clickable" id="stat_damaged_col4">伤害类型<span id="table_stat_damaged_orderInfo_4"><span></span><span></span></span></span></th><th order="-1" id="th_stat_damaged5" class="content_table stat_order"><span id="stat_damaged_col5">总数<span class="pair_value" id="table_stat_damaged_orderInfo_5"><span></span><span></span></span><br><span class="pair_value"><span onclick="co('table_stat_damaged',5,0);" class="clickable">ROLL点</span>&nbsp;&nbsp;<span onclick="co('table_stat_damaged',5,1);" class="clickable">实际值</span></span></span></th><th order="-1" id="th_stat_damaged6" class="content_table stat_order"><span id="stat_damaged_col6">平均值<span class="pair_value" id="table_stat_damaged_orderInfo_6"><span></span><span></span></span><br><span class="pair_value"><span onclick="co('table_stat_damaged',6,0);" class="clickable">ROLL点</span>&nbsp;&nbsp;<span onclick="co('table_stat_damaged',6,1);" class="clickable">实际值</span></span></span></th><th order="-1" id="th_stat_damaged7" class="content_table stat_order"><span onclick="co('table_stat_damaged',7,0);" class="clickable" id="stat_damaged_col7">次数<span id="table_stat_damaged_orderInfo_7"><span></span><span></span></span></span></th><th order="-1" id="th_stat_damaged8" class="content_table stat_order"><span id="stat_damaged_col8">Max值<span class="pair_value" id="table_stat_damaged_orderInfo_8"><span></span><span></span></span><br><span class="pair_value"><span onclick="co('table_stat_damaged',8,0);" class="clickable">ROLL点</span>&nbsp;&nbsp;<span onclick="co('table_stat_damaged',8,1);" class="clickable">实际值</span></span></span></th><th order="-1" id="th_stat_damaged9" class="content_table stat_order"><span id="stat_damaged_col9">Min值<span class="pair_value" id="table_stat_damaged_orderInfo_9"><span></span><span></span></span><br><span class="pair_value"><span onclick="co('table_stat_damaged',9,0);" class="clickable">ROLL点</span>&nbsp;&nbsp;<span onclick="co('table_stat_damaged',9,1);" class="clickable">实际值</span></span></span></th><th order="-1" id="th_stat_damaged10" class="content_table stat_order"><span id="stat_damaged_col10">STD值<span class="pair_value" id="table_stat_damaged_orderInfo_10"><span></span><span></span></span><br><span class="pair_value"><span onclick="co('table_stat_damaged',10,0);" class="clickable">ROLL点</span>&nbsp;&nbsp;<span onclick="co('table_stat_damaged',10,1);" class="clickable">实际值</span></span></span></th><th order="-1" id="th_stat_damaged11" class="content_table stat_order"><span onclick="co('table_stat_damaged',11,0);" class="clickable" id="stat_damaged_col11">数值列表<span id="table_stat_damaged_orderInfo_11"><span></span><span></span></span></span></th></tr><tr class="content_table_filter_row" id="filter_stat_damaged"><td><select onchange="cf('table_stat_damaged','filter_stat_damaged');" id="filter_stat_damaged_combobox_0"><option value="0_all">全部</option><option value="0_0">城墙上的法师守卫</option></select><select style="display: none;" onchange="cf('table_stat_damaged','filter_stat_damaged');" id="org_filter_stat_damaged_combobox_0"><option value="0_all">全部</option><option value="0_0">城墙上的法师守卫</option></select></td><td><select onchange="cf('table_stat_damaged','filter_stat_damaged');" id="filter_stat_damaged_combobox_1"><option value="1_all">全部</option><option value="1_0">远程</option></select><select style="display: none;" onchange="cf('table_stat_damaged','filter_stat_damaged');" id="org_filter_stat_damaged_combobox_1"><option value="1_all">全部</option><option value="1_0">远程</option></select></td><td><select onchange="cf('table_stat_damaged','filter_stat_damaged');" id="filter_stat_damaged_combobox_2"><option value="2_all">全部</option><option value="2_0">投掷武器攻击</option></select><select style="display: none;" onchange="cf('table_stat_damaged','filter_stat_damaged');" id="org_filter_stat_damaged_combobox_2"><option value="2_all">全部</option><option value="2_0">投掷武器攻击</option></select></td><td><select onchange="cf('table_stat_damaged','filter_stat_damaged');" id="filter_stat_damaged_combobox_3"><option value="3_all">全部</option><option value="3_0">布林达萨斯的蝉翼飞刀</option></select><select style="display: none;" onchange="cf('table_stat_damaged','filter_stat_damaged');" id="org_filter_stat_damaged_combobox_3"><option value="3_all">全部</option><option value="3_0">布林达萨斯的蝉翼飞刀</option></select></td><td><select onchange="cf('table_stat_damaged','filter_stat_damaged');" id="filter_stat_damaged_combobox_4"><option value="4_all">全部</option><option value="4_0">穿刺</option><option value="4_1">酸性</option><option value="4_2">心灵</option></select><select style="display: none;" onchange="cf('table_stat_damaged','filter_stat_damaged');" id="org_filter_stat_damaged_combobox_4"><option value="4_all">全部</option><option value="4_0">穿刺</option><option value="4_1">酸性</option><option value="4_2">心灵</option></select></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td style="text-align: center;"><input onclick="cf('table_stat_damaged','filter_stat_damaged');" class="button" value="查询" id="filter_stat_damaged_button" type="button"></td></tr><tr id="0_0,1_0,2_0,3_0,4_0,5_-1,6_-1,7_-1,8_-1,9_-1,10_-1,11_-1" oriorder="0" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_monster" kind="1" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');" href="#">城墙上的法师守卫</a></td><td style="text-align: left;" class="content_table">远程</td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E6%8A%95%E6%8E%B7%E6%AD%A6%E5%99%A8%E6%94%BB%E5%87%BB');" href="#">投掷武器攻击</a></td><td style="text-align: left;" class="content_table"><span><a class="report  rep_uni item_unique" kind="-1" onclick="return o('i','%E5%B8%83%E6%9E%97%E8%BE%BE%E8%90%A8%E6%96%AF%E7%9A%84%E8%9D%89%E7%BF%BC%E9%A3%9E%E5%88%80');" href="#">布林达萨斯的蝉翼飞刀</a></span></td><td style="text-align: left;" class="content_table">穿刺</td><td style="text-align: right;" class="content_table"><table id="3_0" class="pair_value"><tbody><tr><td>3</td><td>0</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="3_0" class="pair_value"><tbody><tr><td>3</td><td>0</td></tr></tbody></table></td><td style="text-align: right;" class="content_table">1</td><td style="text-align: right;" class="content_table"><table id="3_0" class="pair_value"><tbody><tr><td>3</td><td>0</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="3_0" class="pair_value"><tbody><tr><td>3</td><td>0</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="0_0" class="pair_value"><tbody><tr><td>0</td><td>0</td></tr></tbody></table></td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_damaged_0',['activeRow_7_1_0_4']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_damaged_0" class="row0"><td colspan="12"><table style="width: 100%;"><tbody><tr><td colspan="3" style="text-align: center;"><span class="pair_value"><span>3</span><span> [ 0 ]</span></span></td></tr></tbody></table></td></tr><tr id="0_0,1_0,2_0,3_0,4_1,5_-1,6_-1,7_-1,8_-1,9_-1,10_-1,11_-1" oriorder="1" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_monster" kind="1" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');" href="#">城墙上的法师守卫</a></td><td style="text-align: left;" class="content_table">远程</td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E6%8A%95%E6%8E%B7%E6%AD%A6%E5%99%A8%E6%94%BB%E5%87%BB');" href="#">投掷武器攻击</a></td><td style="text-align: left;" class="content_table"><span><a class="report  rep_uni item_unique" kind="-1" onclick="return o('i','%E5%B8%83%E6%9E%97%E8%BE%BE%E8%90%A8%E6%96%AF%E7%9A%84%E8%9D%89%E7%BF%BC%E9%A3%9E%E5%88%80');" href="#">布林达萨斯的蝉翼飞刀</a></span></td><td style="text-align: left;" class="content_table">酸性</td><td style="text-align: right;" class="content_table"><table id="2_2" class="pair_value"><tbody><tr><td>2</td><td>2</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="2_2" class="pair_value"><tbody><tr><td>2</td><td>2</td></tr></tbody></table></td><td style="text-align: right;" class="content_table">1</td><td style="text-align: right;" class="content_table"><table id="2_2" class="pair_value"><tbody><tr><td>2</td><td>2</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="2_2" class="pair_value"><tbody><tr><td>2</td><td>2</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="0_0" class="pair_value"><tbody><tr><td>0</td><td>0</td></tr></tbody></table></td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_damaged_1',['activeRow_7_1_0_4']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_damaged_1" class="row1"><td colspan="12"><table style="width: 100%;"><tbody><tr><td colspan="3" style="text-align: center;"><span class="pair_value"><span>2</span><span> [ 2 ]</span></span></td></tr></tbody></table></td></tr><tr id="0_0,1_0,2_0,3_0,4_2,5_-1,6_-1,7_-1,8_-1,9_-1,10_-1,11_-1" oriorder="2" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_monster" kind="1" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');" href="#">城墙上的法师守卫</a></td><td style="text-align: left;" class="content_table">远程</td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E6%8A%95%E6%8E%B7%E6%AD%A6%E5%99%A8%E6%94%BB%E5%87%BB');" href="#">投掷武器攻击</a></td><td style="text-align: left;" class="content_table"><span><a class="report  rep_uni item_unique" kind="-1" onclick="return o('i','%E5%B8%83%E6%9E%97%E8%BE%BE%E8%90%A8%E6%96%AF%E7%9A%84%E8%9D%89%E7%BF%BC%E9%A3%9E%E5%88%80');" href="#">布林达萨斯的蝉翼飞刀</a></span></td><td style="text-align: left;" class="content_table">心灵</td><td style="text-align: right;" class="content_table"><table id="41_41" class="pair_value"><tbody><tr><td>41</td><td>41</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="41_41" class="pair_value"><tbody><tr><td>41</td><td>41</td></tr></tbody></table></td><td style="text-align: right;" class="content_table">1</td><td style="text-align: right;" class="content_table"><table id="41_41" class="pair_value"><tbody><tr><td>41</td><td>41</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="41_41" class="pair_value"><tbody><tr><td>41</td><td>41</td></tr></tbody></table></td><td style="text-align: right;" class="content_table"><table id="0_0" class="pair_value"><tbody><tr><td>0</td><td>0</td></tr></tbody></table></td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_damaged_2',['activeRow_7_1_0_4']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_damaged_2" class="row0"><td colspan="12"><table style="width: 100%;"><tbody><tr><td colspan="3" style="text-align: center;"><span class="pair_value"><span>41</span><span> [ 41 ]</span></span></td></tr></tbody></table></td></tr></tbody></table></div><div style="display: none;" class="content" id="stat_buff"><div style="text-align: center;" class="stat_header"><span onclick="ct('table_stat_buff');" class="stat_title clickable">给予增益</span></div><table id="table_stat_buff" style="margin: 0px auto;" class="content_table"><tbody><tr class="content_table_header"><th order="-1" id="th_stat_buff0" class="content_table stat_order"><span id="stat_buff_col0">人物<span class="pair_hero" id="table_stat_buff_orderInfo_0"><span></span><span></span></span></span><table class="pair_hero"><tbody><tr><td><input onclick="cf('table_stat_buff','filter_stat_buff');" id="table_stat_buff_checkbox_0_0" value="0" type="checkbox">英雄</td><td><input onclick="cf('table_stat_buff','filter_stat_buff');" id="table_stat_buff_checkbox_0_1" value="1" type="checkbox">对手</td></tr></tbody></table></th><th order="-1" id="th_stat_buff1" class="content_table stat_order"><span onclick="co('table_stat_buff',1,0);" class="clickable" id="stat_buff_col1">技能<span id="table_stat_buff_orderInfo_1"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buff2" class="content_table stat_order"><span onclick="co('table_stat_buff',2,0);" class="clickable" id="stat_buff_col2">物品<span id="table_stat_buff_orderInfo_2"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buff3" class="content_table stat_order"><span onclick="co('table_stat_buff',3,0);" class="clickable" id="stat_buff_col3">增益类型<span id="table_stat_buff_orderInfo_3"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buff4" class="content_table stat_order"><span onclick="co('table_stat_buff',4,0);" class="clickable" id="stat_buff_col4">次数<span id="table_stat_buff_orderInfo_4"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buff5" class="content_table stat_order"><span onclick="co('table_stat_buff',5,0);" class="clickable" id="stat_buff_col5">详细列表<span id="table_stat_buff_orderInfo_5"><span></span><span></span></span></span></th></tr><tr class="content_table_filter_row" id="filter_stat_buff"><td><select onchange="cf('table_stat_buff','filter_stat_buff');" id="filter_stat_buff_combobox_0"><option value="0_all">全部</option><option value="0_0">æ¸šã‚«ãƒ²ãƒ«</option><option value="0_1">城墙上的法师守卫</option></select><select style="display: none;" onchange="cf('table_stat_buff','filter_stat_buff');" id="org_filter_stat_buff_combobox_0"><option value="0_all">全部</option><option value="0_0">æ¸šã‚«ãƒ²ãƒ«</option><option value="0_1">城墙上的法师守卫</option></select></td><td><select onchange="cf('table_stat_buff','filter_stat_buff');" id="filter_stat_buff_combobox_1"><option value="1_all">全部</option><option value="1_0">疾风之速</option><option value="1_1">坚定不移</option><option value="1_2">魔法防护</option><option value="1_3">远古智慧（防御）</option></select><select style="display: none;" onchange="cf('table_stat_buff','filter_stat_buff');" id="org_filter_stat_buff_combobox_1"><option value="1_all">全部</option><option value="1_0">疾风之速</option><option value="1_1">坚定不移</option><option value="1_2">魔法防护</option><option value="1_3">远古智慧（防御）</option></select></td><td><select onchange="cf('table_stat_buff','filter_stat_buff');" id="filter_stat_buff_combobox_2"><option value="2_all">全部</option><option value="2_0"></option><option value="2_1">赤虎之守护头盔</option></select><select style="display: none;" onchange="cf('table_stat_buff','filter_stat_buff');" id="org_filter_stat_buff_combobox_2"><option value="2_all">全部</option><option value="2_0"></option><option value="2_1">赤虎之守护头盔</option></select></td><td><select onchange="cf('table_stat_buff','filter_stat_buff');" id="filter_stat_buff_combobox_3"><option value="3_all">全部</option><option value="3_0">回合前</option><option value="3_1">回合中</option></select><select style="display: none;" onchange="cf('table_stat_buff','filter_stat_buff');" id="org_filter_stat_buff_combobox_3"><option value="3_all">全部</option><option value="3_0">回合前</option><option value="3_1">回合中</option></select></td><td><input size="6" type="text"></td><td style="text-align: center;"><input onclick="cf('table_stat_buff','filter_stat_buff');" class="button" value="查询" id="filter_stat_buff_button" type="button"></td></tr><tr id="0_0,1_0,2_0,3_1,4_-1,5_-1" oriorder="0" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_myhero" kind="0" onclick="return jump('h',96668)" href="#">æ¸šã‚«ãƒ²ãƒ«</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E7%96%BE%E9%A3%8E%E4%B9%8B%E9%80%9F');" href="#">疾风之速</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合中</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buff_0',['activeRow_7_1_0_3']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buff_0" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_0,1_3,2_1,3_0,4_-1,5_-1" oriorder="1" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_myhero" kind="0" onclick="return jump('h',96668)" href="#">æ¸šã‚«ãƒ²ãƒ«</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E8%BF%9C%E5%8F%A4%E6%99%BA%E6%85%A7%EF%BC%88%E9%98%B2%E5%BE%A1%EF%BC%89');" href="#">远古智慧（防御）</a></td><td style="text-align: left;" class="content_table"><span><a class="report  rep_uni item_unique" kind="-1" onclick="return o('i','%E8%B5%A4%E8%99%8E%E4%B9%8B%E5%AE%88%E6%8A%A4%E5%A4%B4%E7%9B%94');" href="#">赤虎之守护头盔</a></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buff_1',['activeRow_7_1_0_0']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buff_1" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_1,1_1,2_0,3_0,4_-1,5_-1" oriorder="2" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_monster" kind="1" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');" href="#">城墙上的法师守卫</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E5%9D%9A%E5%AE%9A%E4%B8%8D%E7%A7%BB');" href="#">坚定不移</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buff_2',['activeRow_7_1_0_2']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buff_2" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_1,1_2,2_0,3_0,4_-1,5_-1" oriorder="3" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_monster" kind="1" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');" href="#">城墙上的法师守卫</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E9%AD%94%E6%B3%95%E9%98%B2%E6%8A%A4');" href="#">魔法防护</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buff_3',['activeRow_7_1_0_1']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buff_3" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr></tbody></table></div><div style="display: none;" class="content" id="stat_buffed"><div style="text-align: center;" class="stat_header"><span onclick="ct('table_stat_buffed');" class="stat_title clickable">接受增益</span></div><table id="table_stat_buffed" style="margin: 0px auto;" class="content_table"><tbody><tr class="content_table_header"><th order="-1" id="th_stat_buffed0" class="content_table stat_order"><span id="stat_buffed_col0">人物<span class="pair_hero" id="table_stat_buffed_orderInfo_0"><span></span><span></span></span></span><table class="pair_hero"><tbody><tr><td><input onclick="cf('table_stat_buffed','filter_stat_buffed');" id="table_stat_buffed_checkbox_0_0" value="0" type="checkbox">英雄</td><td><input onclick="cf('table_stat_buffed','filter_stat_buffed');" id="table_stat_buffed_checkbox_0_1" value="1" type="checkbox">对手</td></tr></tbody></table></th><th order="-1" id="th_stat_buffed1" class="content_table stat_order"><span onclick="co('table_stat_buffed',1,0);" class="clickable" id="stat_buffed_col1">技能<span id="table_stat_buffed_orderInfo_1"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buffed2" class="content_table stat_order"><span onclick="co('table_stat_buffed',2,0);" class="clickable" id="stat_buffed_col2">物品<span id="table_stat_buffed_orderInfo_2"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buffed3" class="content_table stat_order"><span onclick="co('table_stat_buffed',3,0);" class="clickable" id="stat_buffed_col3">增益类型<span id="table_stat_buffed_orderInfo_3"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buffed4" class="content_table stat_order"><span onclick="co('table_stat_buffed',4,0);" class="clickable" id="stat_buffed_col4">次数<span id="table_stat_buffed_orderInfo_4"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buffed5" class="content_table stat_order"><span onclick="co('table_stat_buffed',5,0);" class="clickable" id="stat_buffed_col5">详细列表<span id="table_stat_buffed_orderInfo_5"><span></span><span></span></span></span></th></tr><tr class="content_table_filter_row" id="filter_stat_buffed"><td><select onchange="cf('table_stat_buffed','filter_stat_buffed');" id="filter_stat_buffed_combobox_0"><option value="0_all">全部</option><option value="0_0">æ¸šã‚«ãƒ²ãƒ«</option><option value="0_1">城墙上的法师守卫</option></select><select style="display: none;" onchange="cf('table_stat_buffed','filter_stat_buffed');" id="org_filter_stat_buffed_combobox_0"><option value="0_all">全部</option><option value="0_0">æ¸šã‚«ãƒ²ãƒ«</option><option value="0_1">城墙上的法师守卫</option></select></td><td><select onchange="cf('table_stat_buffed','filter_stat_buffed');" id="filter_stat_buffed_combobox_1"><option value="1_all">全部</option><option value="1_0">疾风之速</option><option value="1_1">坚定不移</option><option value="1_2">魔法防护</option><option value="1_3">远古智慧（防御）</option></select><select style="display: none;" onchange="cf('table_stat_buffed','filter_stat_buffed');" id="org_filter_stat_buffed_combobox_1"><option value="1_all">全部</option><option value="1_0">疾风之速</option><option value="1_1">坚定不移</option><option value="1_2">魔法防护</option><option value="1_3">远古智慧（防御）</option></select></td><td><select onchange="cf('table_stat_buffed','filter_stat_buffed');" id="filter_stat_buffed_combobox_2"><option value="2_all">全部</option><option value="2_0"></option><option value="2_1">赤虎之守护头盔</option></select><select style="display: none;" onchange="cf('table_stat_buffed','filter_stat_buffed');" id="org_filter_stat_buffed_combobox_2"><option value="2_all">全部</option><option value="2_0"></option><option value="2_1">赤虎之守护头盔</option></select></td><td><select onchange="cf('table_stat_buffed','filter_stat_buffed');" id="filter_stat_buffed_combobox_3"><option value="3_all">全部</option><option value="3_0">回合前</option><option value="3_1">回合中</option></select><select style="display: none;" onchange="cf('table_stat_buffed','filter_stat_buffed');" id="org_filter_stat_buffed_combobox_3"><option value="3_all">全部</option><option value="3_0">回合前</option><option value="3_1">回合中</option></select></td><td><input size="6" type="text"></td><td style="text-align: center;"><input onclick="cf('table_stat_buffed','filter_stat_buffed');" class="button" value="查询" id="filter_stat_buffed_button" type="button"></td></tr><tr id="0_0,1_0,2_0,3_1,4_-1,5_-1" oriorder="0" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_myhero" kind="0" onclick="return jump('h',96668)" href="#">æ¸šã‚«ãƒ²ãƒ«</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E7%96%BE%E9%A3%8E%E4%B9%8B%E9%80%9F');" href="#">疾风之速</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合中</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_0',['activeRow_7_1_0_3']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_0" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_0,1_3,2_1,3_0,4_-1,5_-1" oriorder="1" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_myhero" kind="0" onclick="return jump('h',96668)" href="#">æ¸šã‚«ãƒ²ãƒ«</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E8%BF%9C%E5%8F%A4%E6%99%BA%E6%85%A7%EF%BC%88%E9%98%B2%E5%BE%A1%EF%BC%89');" href="#">远古智慧（防御）</a></td><td style="text-align: left;" class="content_table"><span><a class="report  rep_uni item_unique" kind="-1" onclick="return o('i','%E8%B5%A4%E8%99%8E%E4%B9%8B%E5%AE%88%E6%8A%A4%E5%A4%B4%E7%9B%94');" href="#">赤虎之守护头盔</a></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_1',['activeRow_7_1_0_0']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_1" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_1,1_1,2_0,3_0,4_-1,5_-1" oriorder="2" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_monster" kind="1" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');" href="#">城墙上的法师守卫</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E5%9D%9A%E5%AE%9A%E4%B8%8D%E7%A7%BB');" href="#">坚定不移</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_2',['activeRow_7_1_0_2']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_2" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_1,1_2,2_0,3_0,4_-1,5_-1" oriorder="3" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_monster" kind="1" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');" href="#">城墙上的法师守卫</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E9%AD%94%E6%B3%95%E9%98%B2%E6%8A%A4');" href="#">魔法防护</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">2</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_3',['activeRow_7_1_0_1']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_3" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr></tbody></table></div><hr></div><h2>2015年2月27日 11:33 - 尤里佛的一天</h2>
+
+    
+        
+
+
+<table class="content_table" width="100%">
+ <tbody><tr class="row0">
+ <td>
+
+<p class="navigation levels">
+ <i><a name="1">层  7</a>
+    </i>
+
+ &nbsp;&nbsp;
+
+ <input onclick="document.location.href='level1.html';" name="level[1]" value="层  1" class="button clickable" type="button"> <input onclick="document.location.href='level2.html';" name="level[2]" value="层  2" class="button clickable" type="button"> <input onclick="document.location.href='level3.html';" name="level[3]" value="层  3" class="button clickable" type="button"> <input onclick="document.location.href='level4.html';" name="level[4]" value="层  4" class="button clickable" type="button"> <input onclick="document.location.href='level5.html';" name="level[5]" value="层  5" class="button clickable" type="button"> <input onclick="document.location.href='level6.html';" name="level[6]" value="层  6" class="button clickable" type="button"> <input name="disabled" value="层  7" class="button_disabled" type="button"> <input onclick="document.location.href='level8.html';" name="level[8]" value="层  8" class="button clickable" type="button"></p>
+
+ <p class="navigation in_report">
+          =返回=
+              <a href="#end">=下一步=</a>         
+     <a href="#1">=最后回合=</a> 
+    
+    
+ </p>
+
+
+
+    <h3><a name="1">出城</a></h3>
+	<p class="rep_level_description">出了大笑的满月旅馆，你沿着路向南门走去，指望在城外找个树林安全地休息下。“停下！谁？去哪？”当你来到大门时，一个重装守卫叫住了你。你能想象今晚城里发生了那么多事后，他们一定在搜寻着一伙全副武装的家伙。不幸的是你们的伪装技巧不够高，试图趁着天黑摸出城外的伎俩被识破了。那么唯有用剑来说话了，只见守卫们的箭矢如雨点般向你们射来。</p>
+
+
+
+
+<!-- computed by s02.neise-games.de on 2015-02-27 at 04:33:22 (combat service build time: Feb  1 2015  20:21:37) -->
+<hr>
+<p class="rep_round_headline">回合 1</p>
+<hr>
+<p class="rep_status_headline">进攻者:</p>
+
+<table class="rep_status_table">
+<tbody><tr>
+<th></th>
+<th>名称</th>
+<th>等级</th>
+<th>位置</th>
+<th>体力</th>
+<th class="resource">Resource</th>
+<th>状态</th>
+</tr>
+<tr>
+<td class="number">1</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>野性狂暴:</b><br />攻击 近战 <span class=\'rep_bonus bonus_positive\'>+10<span class=\'rep_decimal\'>.00</span></span><br />攻击 远程 <span class=\'rep_bonus bonus_negative\'>-10<span class=\'rep_decimal\'>.00</span></span><br />攻击 魔法 <span class=\'rep_bonus bonus_negative\'>-10<span class=\'rep_decimal\'>.00</span></span><br />力量 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.00</span></span><br />敏捷 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.00</span></span><br />体力回复 <span class=\'rep_bonus bonus_negative\'>-6<span class=\'rep_decimal\'>.80</span></span><br />防御 心理攻击 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.00</span></span><br />防御 魔法 <span class=\'rep_bonus bonus_negative\'>-10<span class=\'rep_decimal\'>.00</span></span><br />攻击 心理攻击 <span class=\'rep_bonus bonus_positive\'>+10<span class=\'rep_decimal\'>.00</span></span><br /><br /><b>野蛮人酋长神秘护身符:</b><br />行动次数 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.20</span></span><br />力量 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.40</span></span><br />防御 心理攻击 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.00</span></span><br />防御 近战 <span class=\'rep_bonus bonus_positive\'>+6<span class=\'rep_decimal\'>.80</span></span><br />攻击 心理攻击 <span class=\'rep_bonus bonus_positive\'>+6<span class=\'rep_decimal\'>.80</span></span><br />攻击 近战 <span class=\'rep_bonus bonus_positive\'>+10<span class=\'rep_decimal\'>.00</span></span><br /><br /><b>精疲力尽:</b><br />先攻 <span class=\'rep_bonus bonus_negative\'>-24%</span><br />先攻 <span class=\'rep_bonus bonus_negative\'>-20%</span> <span style=\'font-size: 0.8em; font-style: italic;\'>下个回合</span><br />攻击 魔法 <span class=\'rep_bonus bonus_negative\'>-20%</span> <span style=\'font-size: 0.8em; font-style: italic;\'>下个回合</span><br />攻击 魔法 <span class=\'rep_bonus bonus_negative\'>-24%</span><br />攻击 远程 <span class=\'rep_bonus bonus_negative\'>-24%</span><br />攻击 远程 <span class=\'rep_bonus bonus_negative\'>-20%</span> <span style=\'font-size: 0.8em; font-style: italic;\'>下个回合</span><br />攻击 近战 <span class=\'rep_bonus bonus_negative\'>-20%</span> <span style=\'font-size: 0.8em; font-style: italic;\'>下个回合</span><br />攻击 近战 <span class=\'rep_bonus bonus_negative\'>-24%</span><br />技能 自然的呼唤 <span class=\'rep_bonus bonus_negative\'>-3<span class=\'rep_decimal\'>.00</span></span><br />技能 忠诚的同伴 <span class=\'rep_bonus bonus_negative\'>-3<span class=\'rep_decimal\'>.00</span></span><br /><br /><b>爱路亚达之活力液(大水罐):</b><br />体力 <span class=\'rep_bonus bonus_positive\'>+13<span class=\'rep_decimal\'>.00</span></span><br />体力回复 <span class=\'rep_bonus bonus_positive\'>+12<span class=\'rep_decimal\'>.58</span></span><br /><br /><b>天赋：巴博许之拥:</b><br />攻击 近战 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.75</span></span><br />效果 近战攻击 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.00</span></span><br />效果 近战派生 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.00</span></span><br /><br /><b>臭腺:</b><br />防御 病毒 <span class=\'rep_bonus bonus_negative\'>-90%</span><br />行动次数 <span class=\'rep_bonus bonus_negative\'>-1<span class=\'rep_decimal\'>.00</span></span>')"><a href="#" onclick="return jump('h',96668)" class="rep_myhero">æ¸šã‚«ãƒ²ãƒ«</a><img src="http://bertous.world-of-dungeons.org/wod/css//skins/skin-3/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>37</td>
+<td class="position">左翼</td>
+<td>460</td>
+<td class="resource">29 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+</tbody></table>
+
+<hr>
+<p class="rep_status_headline">防御者:</p>
+
+<table class="rep_status_table">
+<tbody><tr>
+<th></th>
+<th>名称</th>
+<th>等级</th>
+<th>位置</th>
+<th>体力</th>
+<th class="resource">Resource</th>
+<th>状态</th>
+</tr>
+<tr>
+<td class="number">1</td>
+<td class="hero"><a href="#" class="rep_monster" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');">城墙上的法师守卫</a><span style="font-size: 0.65em;">1</span>
+</td>
+<td>26</td>
+<td class="position">中间</td>
+<td>38</td>
+<td class="resource">180 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">准备好</td></tr>
+<tr>
+<td class="number">2</td>
+<td class="hero"><a href="#" class="rep_monster" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');">城墙上的法师守卫</a><span style="font-size: 0.65em;">2</span>
+</td>
+<td>26</td>
+<td class="position">中间</td>
+<td>38</td>
+<td class="resource">180 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">准备好</td></tr>
+</tbody></table>
+
+<hr>
+<table>
+<tbody><tr id="activeRow_7_1_0_0"><td class="rep_initiative">&nbsp;</td>
+<td><a href="#" onclick="return jump('h',96668)" class="rep_myhero">æ¸šã‚«ãƒ²ãƒ«</a>
+使用<a href="#" onclick="return o('s','%E8%BF%9C%E5%8F%A4%E6%99%BA%E6%85%A7%EF%BC%88%E9%98%B2%E5%BE%A1%EF%BC%89');">远古智慧（防御）</a> (<span class="rep_mana_cost">16 法力</span>/<a href="#" onclick="return o('i','%E8%B5%A4%E8%99%8E%E4%B9%8B%E5%AE%88%E6%8A%A4%E5%A4%B4%E7%9B%94');" onmouseover="return wodToolTip(this,'防御 心理攻击 <span class=\'rep_bonus bonus_positive\'>+42<span class=\'rep_decimal\'>.50</span></span><br />力量 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.44</span></span><br />意志 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.44</span></span><br />防御 魔法 <span class=\'rep_bonus bonus_positive\'>+42<span class=\'rep_decimal\'>.50</span></span><br />灵巧 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.00</span></span>');" class="report  rep_uni item_unique">赤虎之守护头盔<img src="http://bertous.world-of-dungeons.org/wod/css//skins/skin-3/images/icons/inf.gif" alt="" border="0"></a>)给</td><td>自身</td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_7_1_0_1"><td class="rep_initiative">&nbsp;</td>
+<td><a href="#" class="rep_monster" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');">城墙上的法师守卫</a><span style="font-size: 0.65em;">1</span>
+使用<a href="#" onclick="return o('s','%E9%AD%94%E6%B3%95%E9%98%B2%E6%8A%A4');" onmouseover="wodToolTip(this,'防御 魔法 <span class=\'rep_bonus bonus_positive\'>+18<span class=\'rep_decimal\'>.00</span></span>')">魔法防护<img src="http://bertous.world-of-dungeons.org/wod/css//skins/skin-3/images/icons/inf.gif" alt="" border="0"></a> (<span class="rep_mana_cost">8 法力</span>)给</td><td><a href="#" class="rep_monster" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');">城墙上的法师守卫</a><span style="font-size: 0.65em;">2</span>
+<br>自身</td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_7_1_0_2"><td class="rep_initiative">&nbsp;</td>
+<td><a href="#" class="rep_monster" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');">城墙上的法师守卫</a><span style="font-size: 0.65em;">2</span>
+使用<a href="#" onclick="return o('s','%E5%9D%9A%E5%AE%9A%E4%B8%8D%E7%A7%BB');" onmouseover="wodToolTip(this,'意志 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.00</span></span>')">坚定不移<img src="http://bertous.world-of-dungeons.org/wod/css//skins/skin-3/images/icons/inf.gif" alt="" border="0"></a> (<span class="rep_mana_cost">9 法力</span>)给</td><td>自身</td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',96668)" class="rep_myhero">æ¸šã‚«ãƒ²ãƒ«</a>
+ 恢复<span class="rep_gain">27</span>法力.</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" class="rep_monster" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');">城墙上的法师守卫</a><span style="font-size: 0.65em;">1</span>
+ 恢复<span class="rep_gain">8</span>法力.</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" class="rep_monster" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');">城墙上的法师守卫</a><span style="font-size: 0.65em;">2</span>
+ 恢复<span class="rep_gain">9</span>法力.</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',96668)" class="rep_myhero">æ¸šã‚«ãƒ²ãƒ«</a>
+使用<a href="#" onclick="return o('s','%E7%8B%82%E6%9A%B4');">狂暴</a> (<span class="rep_mana_cost">4 法力</span>): 先攻174</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_7_1_0_3"><td class="rep_initiative">先攻174<br><span class="rep_action">第1步行动 / 共5步</span></td>
+<td><a href="#" onclick="return jump('h',96668)" class="rep_myhero">æ¸šã‚«ãƒ²ãƒ«</a>
+使用<a href="#" onclick="return o('s','%E7%96%BE%E9%A3%8E%E4%B9%8B%E9%80%9F');" onmouseover="wodToolTip(this,'敏捷 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.50</span></span>')">疾风之速<img src="http://bertous.world-of-dungeons.org/wod/css//skins/skin-3/images/icons/inf.gif" alt="" border="0"></a> (<span class="rep_mana_cost">8 法力</span>)给</td><td>自身</td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_7_1_0_4"><td class="rep_initiative">先攻139<br><span class="rep_action">第2步行动 / 共5步</span></td>
+<td><a href="#" onclick="return jump('h',96668)" class="rep_myhero">æ¸šã‚«ãƒ²ãƒ«</a>
+远程攻击 (<a href="#" onclick="return o('s','%E6%8A%95%E6%8E%B7%E6%AD%A6%E5%99%A8%E6%94%BB%E5%87%BB');">投掷武器攻击</a>/243/<a href="#" onclick="return o('i','%E5%B8%83%E6%9E%97%E8%BE%BE%E8%90%A8%E6%96%AF%E7%9A%84%E8%9D%89%E7%BF%BC%E9%A3%9E%E5%88%80');" onmouseover="return wodToolTip(this,'体力回复 <span class=\'rep_bonus bonus_negative\'>-7<span class=\'rep_decimal\'>.00</span></span> <span style=\'font-size: 0.8em; font-style: italic;\'>一回合后</span><br />法力回复 <span class=\'rep_bonus bonus_negative\'>-7<span class=\'rep_decimal\'>.00</span></span> (法力)<br />体力回复 <span class=\'rep_bonus bonus_negative\'>-7<span class=\'rep_decimal\'>.00</span></span><br />意志 <span class=\'rep_bonus bonus_negative\'>-7<span class=\'rep_decimal\'>.00</span></span> <span style=\'font-size: 0.8em; font-style: italic;\'>3回合后</span><br />意志 <span class=\'rep_bonus bonus_negative\'>-5<span class=\'rep_decimal\'>.60</span></span> <span style=\'font-size: 0.8em; font-style: italic;\'>一回合后</span><br />敏感 心灵伤害 <span class=\'rep_bonus bonus_positive\'>+10%</span>/<span class=\'rep_bonus bonus_positive\'>+10%</span>/<span class=\'rep_bonus bonus_positive\'>+10%</span> (近战)<br />敏感 心灵伤害 <span class=\'rep_bonus bonus_positive\'>+10%</span>/<span class=\'rep_bonus bonus_positive\'>+10%</span>/<span class=\'rep_bonus bonus_positive\'>+10%</span> (远程)<br />力量 <span class=\'rep_bonus bonus_negative\'>-7<span class=\'rep_decimal\'>.00</span></span> <span style=\'font-size: 0.8em; font-style: italic;\'>3回合后</span><br />敏感 心灵伤害 <span class=\'rep_bonus bonus_positive\'>+30%</span>/<span class=\'rep_bonus bonus_positive\'>+30%</span>/<span class=\'rep_bonus bonus_positive\'>+30%</span> (魔法)<br />力量 <span class=\'rep_bonus bonus_negative\'>-8<span class=\'rep_decimal\'>.64</span></span><br />法力回复 <span class=\'rep_bonus bonus_negative\'>-7<span class=\'rep_decimal\'>.00</span></span> (法力) <span style=\'font-size: 0.8em; font-style: italic;\'>一回合后</span><br />意志 <span class=\'rep_bonus bonus_negative\'>-8<span class=\'rep_decimal\'>.64</span></span><br />力量 <span class=\'rep_bonus bonus_negative\'>-5<span class=\'rep_decimal\'>.60</span></span> <span style=\'font-size: 0.8em; font-style: italic;\'>一回合后</span><br />防御 远程 <span class=\'rep_bonus bonus_negative\'>-7<span class=\'rep_decimal\'>.00</span></span><br />防御 近战 <span class=\'rep_bonus bonus_negative\'>-5<span class=\'rep_decimal\'>.60</span></span><br />攻击 远程 <span class=\'rep_bonus bonus_negative\'>-5<span class=\'rep_decimal\'>.60</span></span><br />攻击 近战 <span class=\'rep_bonus bonus_negative\'>-7<span class=\'rep_decimal\'>.00</span></span><br />敏捷 <span class=\'rep_bonus bonus_negative\'>-5<span class=\'rep_decimal\'>.60</span></span> <span style=\'font-size: 0.8em; font-style: italic;\'>一回合后</span><br />敏捷 <span class=\'rep_bonus bonus_negative\'>-8<span class=\'rep_decimal\'>.64</span></span><br />敏捷 <span class=\'rep_bonus bonus_negative\'>-7<span class=\'rep_decimal\'>.00</span></span> <span style=\'font-size: 0.8em; font-style: italic;\'>3回合后</span>');" class="report  rep_uni item_unique">布林达萨斯的蝉翼飞刀<img src="http://bertous.world-of-dungeons.org/wod/css//skins/skin-3/images/icons/inf.gif" alt="" border="0"></a>)</td><td><a href="#" class="rep_monster" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');">城墙上的法师守卫</a><span style="font-size: 0.65em;">2</span>
+ (<a href="#" onclick="return o('s','%E8%BF%9C%E7%A8%8B%E5%9B%9E%E9%81%BF');">远程回避</a>/133): <span class="rep_hit_good">重击</span> - 击倒<br>0 [+3] 穿刺伤害<br>41 心灵伤害<br>2 酸性伤害</td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_7_1_0_5"><td class="rep_initiative">先攻104<br><span class="rep_action">第3步行动 / 共5步</span></td>
+<td><a href="#" onclick="return jump('h',96668)" class="rep_myhero">æ¸šã‚«ãƒ²ãƒ«</a>
+远程攻击 (<a href="#" onclick="return o('s','%E6%8A%95%E6%8E%B7%E6%AD%A6%E5%99%A8%E6%94%BB%E5%87%BB');">投掷武器攻击</a>/96/<a href="#" onclick="return o('i','%E5%9B%9E%E5%8A%9B%E6%A3%92');" class="report  rep_uni item_unique">回力棒</a>)</td><td><a href="#" class="rep_monster" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');">城墙上的法师守卫</a><span style="font-size: 0.65em;">1</span>
+ (<a href="#" onclick="return o('s','%E8%BF%9C%E7%A8%8B%E5%9B%9E%E9%81%BF');">远程回避</a>/158): <span class="rep_miss">闪避</span></td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_7_1_0_6"><td class="rep_initiative">先攻69<br><span class="rep_action">第4步行动 / 共5步</span></td>
+<td><a href="#" onclick="return jump('h',96668)" class="rep_myhero">æ¸šã‚«ãƒ²ãƒ«</a>
+远程攻击 (<a href="#" onclick="return o('s','%E6%8A%95%E6%8E%B7%E6%AD%A6%E5%99%A8%E6%94%BB%E5%87%BB');">投掷武器攻击</a>/124/<a href="#" onclick="return o('i','%E5%9B%9E%E5%8A%9B%E6%A3%92');" class="report  rep_uni item_unique">回力棒</a>)</td><td><a href="#" class="rep_monster" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');">城墙上的法师守卫</a><span style="font-size: 0.65em;">1</span>
+ (<a href="#" onclick="return o('s','%E8%BF%9C%E7%A8%8B%E5%9B%9E%E9%81%BF');">远程回避</a>/205): <span class="rep_miss">闪避</span></td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_7_1_0_7"><td class="rep_initiative">先攻41<br><span class="rep_action">第1步行动 / 共2步</span></td>
+<td colspan="2"><a href="#" class="rep_monster" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');">城墙上的法师守卫</a><span style="font-size: 0.65em;">1</span>
+ 是个<b>胆小鬼</b>。逃跑的原因是：指定数量的队友都被击倒了.</td></tr><tr><td colspan="3"><hr></td></tr>
+</tbody></table>
+<hr>
+<p class="rep_status_headline">进攻者:</p>
+
+<table class="rep_status_table">
+<tbody><tr>
+<th></th>
+<th>名称</th>
+<th>等级</th>
+<th>位置</th>
+<th>体力</th>
+<th class="resource">Resource</th>
+<th>状态</th>
+</tr>
+<tr>
+<td class="number">1</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>野性狂暴:</b><br />攻击 近战 <span class=\'rep_bonus bonus_positive\'>+10<span class=\'rep_decimal\'>.00</span></span><br />攻击 远程 <span class=\'rep_bonus bonus_negative\'>-10<span class=\'rep_decimal\'>.00</span></span><br />攻击 魔法 <span class=\'rep_bonus bonus_negative\'>-10<span class=\'rep_decimal\'>.00</span></span><br />力量 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.00</span></span><br />敏捷 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.00</span></span><br />体力回复 <span class=\'rep_bonus bonus_negative\'>-6<span class=\'rep_decimal\'>.80</span></span><br />防御 心理攻击 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.00</span></span><br />防御 魔法 <span class=\'rep_bonus bonus_negative\'>-10<span class=\'rep_decimal\'>.00</span></span><br />攻击 心理攻击 <span class=\'rep_bonus bonus_positive\'>+10<span class=\'rep_decimal\'>.00</span></span><br /><br /><b>野蛮人酋长神秘护身符:</b><br />行动次数 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.20</span></span><br />力量 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.40</span></span><br />防御 心理攻击 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.00</span></span><br />防御 近战 <span class=\'rep_bonus bonus_positive\'>+6<span class=\'rep_decimal\'>.80</span></span><br />攻击 心理攻击 <span class=\'rep_bonus bonus_positive\'>+6<span class=\'rep_decimal\'>.80</span></span><br />攻击 近战 <span class=\'rep_bonus bonus_positive\'>+10<span class=\'rep_decimal\'>.00</span></span><br /><br /><b>精疲力尽:</b><br />先攻 <span class=\'rep_bonus bonus_negative\'>-24%</span><br />先攻 <span class=\'rep_bonus bonus_negative\'>-20%</span> <span style=\'font-size: 0.8em; font-style: italic;\'>下个回合</span><br />攻击 魔法 <span class=\'rep_bonus bonus_negative\'>-20%</span> <span style=\'font-size: 0.8em; font-style: italic;\'>下个回合</span><br />攻击 魔法 <span class=\'rep_bonus bonus_negative\'>-24%</span><br />攻击 远程 <span class=\'rep_bonus bonus_negative\'>-24%</span><br />攻击 远程 <span class=\'rep_bonus bonus_negative\'>-20%</span> <span style=\'font-size: 0.8em; font-style: italic;\'>下个回合</span><br />攻击 近战 <span class=\'rep_bonus bonus_negative\'>-20%</span> <span style=\'font-size: 0.8em; font-style: italic;\'>下个回合</span><br />攻击 近战 <span class=\'rep_bonus bonus_negative\'>-24%</span><br />技能 自然的呼唤 <span class=\'rep_bonus bonus_negative\'>-3<span class=\'rep_decimal\'>.00</span></span><br />技能 忠诚的同伴 <span class=\'rep_bonus bonus_negative\'>-3<span class=\'rep_decimal\'>.00</span></span><br /><br /><b>爱路亚达之活力液(大水罐):</b><br />体力 <span class=\'rep_bonus bonus_positive\'>+13<span class=\'rep_decimal\'>.00</span></span><br />体力回复 <span class=\'rep_bonus bonus_positive\'>+12<span class=\'rep_decimal\'>.58</span></span><br /><br /><b>天赋：巴博许之拥:</b><br />攻击 近战 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.75</span></span><br />效果 近战攻击 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.00</span></span><br />效果 近战派生 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.00</span></span><br /><br /><b>臭腺:</b><br />防御 病毒 <span class=\'rep_bonus bonus_negative\'>-90%</span><br />行动次数 <span class=\'rep_bonus bonus_negative\'>-1<span class=\'rep_decimal\'>.00</span></span>')"><a href="#" onclick="return jump('h',96668)" class="rep_myhero">æ¸šã‚«ãƒ²ãƒ«</a><img src="http://bertous.world-of-dungeons.org/wod/css//skins/skin-3/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>37</td>
+<td class="position">左翼</td>
+<td>460</td>
+<td class="resource">28 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+</tbody></table>
+
+<hr>
+<p class="rep_status_headline">防御者:</p>
+
+<table class="rep_status_table">
+<tbody><tr>
+<th></th>
+<th>名称</th>
+<th>等级</th>
+<th>位置</th>
+<th>体力</th>
+<th class="resource">Resource</th>
+<th>状态</th>
+</tr>
+<tr>
+<td class="number">1</td>
+<td class="hero"><a href="#" class="rep_monster" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');">城墙上的法师守卫</a><span style="font-size: 0.65em;">1</span>
+</td>
+<td>26</td>
+<td class="position">中间</td>
+<td>38</td>
+<td class="resource">180 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_status_msg">逃跑</td></tr>
+<tr>
+<td class="number">2</td>
+<td class="hero"><a href="#" class="rep_monster" onclick="return o('n','%E5%9F%8E%E5%A2%99%E4%B8%8A%E7%9A%84%E6%B3%95%E5%B8%88%E5%AE%88%E5%8D%AB');">城墙上的法师守卫</a><span style="font-size: 0.65em;">2</span>
+</td>
+<td>26</td>
+<td class="position">中间</td>
+<td>0</td>
+<td class="resource">180 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_status_msg">击倒</td></tr>
+</tbody></table>
+
+<p class="rep_room_end">进攻者胜利了！</p>
+<hr><p class="rep_level_success">你击倒了守卫，精疲力竭地穿过了城门。你在路上走着，看到路边的树林里有一个简陋木屋。</p>
+<hr>
+<!-- WINNER MSG PLACEHOLDER -->
+<div class="rewards points"><a href="#" onclick="return jump('h',96668)" class="rep_myhero">æ¸šã‚«ãƒ²ãƒ«</a>
+ 得到255<img src="http://bertous.world-of-dungeons.org/wod/css//skins/skin-3/images/icons/lang/cn/ep.gif" alt="经验点" title="经验点" border="0">和+13<span class="rep_decimal">.8</span><img src="http://bertous.world-of-dungeons.org/wod/css//skins/skin-3/images/icons/lang/cn/fame.gif" alt="荣誉" title="荣誉" border="0">，并找到61<img src="http://bertous.world-of-dungeons.org/wod/css//skins/skin-3/images/icons/lang/cn/gold.gif" alt="金币" title="金币" border="0"></div>
+
+
+<p class="navigation in_report">
+         <a href="#1">=返回=</a>             =下一步=
+        &nbsp;
+</p>
+
+
+<p class="navigation levels">
+<i><a name="1">层  7</a>
+    </i>
+ &nbsp;&nbsp;
+ 
+  <input onclick="document.location.href='level1.html';" name="level[1]" value="层  1" class="button clickable" type="button"> <input onclick="document.location.href='level2.html';" name="level[2]" value="层  2" class="button clickable" type="button"> <input onclick="document.location.href='level3.html';" name="level[3]" value="层  3" class="button clickable" type="button"> <input onclick="document.location.href='level4.html';" name="level[4]" value="层  4" class="button clickable" type="button"> <input onclick="document.location.href='level5.html';" name="level[5]" value="层  5" class="button clickable" type="button"> <input onclick="document.location.href='level6.html';" name="level[6]" value="层  6" class="button clickable" type="button"> <input name="disabled" value="层  7" class="button_disabled" type="button"> <input onclick="document.location.href='level8.html';" name="level[8]" value="层  8" class="button clickable" type="button"></p>
+
+
+ </td>
+ </tr>
+</tbody></table>
+
+    
+        
+ 
+<a name="end"></a>
+<p>
+ <input onclick="document.location.href='../index.html';" name="overview" value="摘要" class="button clickable" type="button"> <input onclick="document.location.href='statistics.html';" name="stats[0]" value="统计表" class="button clickable" type="button"> <input onclick="document.location.href='items.html';" name="items[0]" value="获得物品" class="button clickable" type="button"> <input name="disabled" value="详细资料" class="button_disabled" type="button"></p>
+
+
+</div>          </form>
+</body>
+</html>
