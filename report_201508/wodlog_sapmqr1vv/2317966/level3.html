@@ -1,0 +1,923 @@
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+
+<meta http-equiv="Content-Language" content="cn">
+
+<link rel="SHORTCUT ICON" href="http://info.world-of-dungeons.org/wod/css/WOD.gif" type="image/gif">
+    
+    
+
+<script type="text/javascript" src="http://canto.world-of-dungeons.org/wod/javascript/wod_standard.js?1439075977"></script>
+<script type="text/javascript" src="http://canto.world-of-dungeons.org/wod/javascript/wodtooltip.js?1439075977"></script>
+
+
+
+
+
+
+
+
+	<title>我的战报</title>
+	<link rel="stylesheet" type="text/css" href="http://canto.world-of-dungeons.org/wod/css/layout.css?1439075977">
+
+    <link rel="stylesheet" type="text/css" href="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/skin-cn.css?1439075977">
+        <style type="text/css">
+/*<![CDATA[*/
+      .tableMinWidthRespectingContent {
+        width:1px;
+        }
+        .tableMinHeightRespectingContent {
+        height:1px;
+        }
+/*]]>*/
+    </style>
+  <script type="text/javascript">window.onload = function(e){wodToolTipInit();wodInitialize('canto.world-of-dungeons.org','','/wod/spiel/','/wod/ajax/','WOD','cn','/wod/css//skins/skin-4/','/wod/css/','1','1');}
+function o(t,n){ 
+ var url="http://canto.world-of-dungeons.org/wod/spiel/";
+if(t=="n"){url += "help/npc"}
+if(t=="s"){url += "hero/skill"}
+if(t=="i"){url += "hero/item"}
+return wo(url + ".php?name=" + n + "&IS_POPUP=1");}
+var CTable=function(){};
+CTable.GetNumber = function (cell) {
+		var numberPatten = /^\s?([\d]+\.?[\d]*)\s?_?\s?([\d]*\.?[\d]*)\s?$/;
+		var pairTable = cell.firstChild;
+		var numberString = cell.textContent;
+		var numbers;
+		if(pairTable && pairTable.nodeName == "TABLE")
+		{
+			numberString = pairTable.id;
+		}
+		if(numberPatten.test(numberString))
+		{
+			numbers = [];
+			var numberres = numberPatten.exec(numberString);
+			if(numberres[1])
+				numbers.push(numberres[1]);
+			if(numberres[2])
+				numbers.push(numberres[2]);
+		}
+		return numbers;
+	}
+CompareString = function CompareString(a, b) {
+        a = a || "";
+        b = b || "";
+        return a.toLowerCase().localeCompare(b.toLowerCase(),"zh-CN-u-co-pinyin");
+    }
+ct = function (Id) {
+        try {
+            var Table = document.getElementById(Id);
+            if (Table.hasAttribute("hide")) {
+                Table.removeAttribute("hide");
+            } else {
+                Table.setAttribute("hide", "hide");
+            }
+        } catch (e) {
+            alert("CTable.OnClickTitle(): " + e);
+        }
+    }
+cf = function (tableId,filterRowId) {
+		try {
+            var Table = document.getElementById(tableId);
+			var filterRow = document.getElementById(filterRowId);
+			var stringfilters = [];
+			var orgstringfilters = [];
+			var numberfilters = [];
+			var filterString = "";
+			var showIds = [];
+			var refilter = 0;
+			
+			var showHero_0 = document.getElementById(tableId + "_checkbox_0_0");
+			var showHero_1 = document.getElementById(tableId + "_checkbox_0_1");
+			var showHero = [showHero_0.checked,showHero_1.checked];
+			
+			for(var i = 0; i< filterRow.cells.length; i++)
+			{
+				var cell = filterRow.cells[i];
+				var stringfilter = document.getElementById(filterRow.id + "_combobox_" + i);
+				var orgstringfilter = document.getElementById('org_' + filterRow.id + "_combobox_" + i);
+				var numberfilter = document.getElementById(filterRow.id + "_textbox_" + i);
+				if(stringfilter){
+					stringfilters.push(stringfilter.value);
+					refilter += stringfilter.selectedIndex > 0?1:0;
+				}
+				else
+					stringfilters.push(null);
+				if(orgstringfilter){
+					for(var ii = 0, ij = orgstringfilter.options.length; ii < ij; ++ii) {
+						if(orgstringfilter.options[ii].value === stringfilter.value) {
+						   orgstringfilter.selectedIndex = ii;
+						   break;
+						}
+					}
+					orgstringfilters.push([stringfilter,orgstringfilter]);
+					showIds.push([]);
+				}
+				if(numberfilter)
+					numberfilters.push(numberfilter.value);
+				else
+					numberfilters.push(null);
+			}
+			var index = 0;
+			var patten = /([\(|\[|>|<|=|]*)\s*([\d]*\.?[\d]*)\s*-?\s*([\d]*\.?[\d]*)\s*([\)|\]|\s]?)/;
+			for(var i = 2;i< Table.rows.length;i=i+2)
+			{
+				var row = Table.rows[i];
+				var rowInfo = Table.rows[i+1];
+				var rowIds = row.id.split(",");
+				var show = true;
+				
+				var hero = row.cells[0].getElementsByTagName('a')[0];
+				var heroKind = hero.getAttribute("kind");
+				show = showHero[heroKind];
+				if(show)
+				{
+					for(var fi =0; fi<stringfilters.length;fi++)
+					{
+						var sfilter = stringfilters[fi];
+						if(!sfilter)
+							continue;
+						if(sfilter != fi + "_all" && sfilter != rowIds[fi])
+						{
+							show = false;
+							break;
+						}
+					}
+				}
+				if(show)
+				{
+					for(fi=0;fi<numberfilters.length;fi++)
+					{
+						var nfilter = numberfilters[fi];
+						
+						if(!nfilter)
+							continue;
+						else 
+						{
+							var numbers = CTable.GetNumber(row.cells[fi]);
+							var nfilters = nfilter.split(/\s*[,|，]\s*/);
+							for(ni = 0; ni < numbers.length; ni++)
+							{
+								var theFilter = nfilters[ni];
+								var testString = "";
+								if(theFilter && patten.test(theFilter))
+								{
+									var	op = "==";
+									var res = patten.exec(theFilter);
+									if(res[1])
+									{
+										op = res[1];
+										if(res[3])
+										if( op == "[") op = ">=";
+										if( op == "(") op = ">";
+										if( op == "=") op = "==";
+									}
+									else
+									{
+										if(res[3])
+											op = ">=";
+									}
+									testString = numbers[ni] + op + res[2];
+									if(res[3])
+									{
+										op = "<=";
+										if(res[4])
+										{
+											op = res[4]
+											if( op == "]") op = "<=";
+											if( op == ")") op = "<";
+										}
+										testString += " && " + numbers[ni] + op + res[3];
+									}
+									show = eval(testString);
+									if(!show)
+										break;
+								}
+							}
+						}
+						if(!show)
+							break;
+					}
+				}
+				row.style.display = show? '':'none';
+				rowInfo.style.display = show? rowInfo.style.display:'none';
+				if(show)
+				{
+					row.className = "row" + index % 2;
+					rowInfo.className = row.className;
+					index++;
+					for(var fi =0; fi<orgstringfilters.length;fi++)
+					{
+						var id = rowIds[fi];
+						if(showIds[fi].indexOf(id) <= -1)
+							showIds[fi].push(id);
+					}
+				}
+			}
+			
+			if(orgstringfilters.length - refilter > 1)
+			{
+				for(var fi =0; fi<orgstringfilters.length;fi++)
+				{
+					var sfilter = orgstringfilters[fi][0];
+					var sfilterorg = orgstringfilters[fi][1];
+					if(!sfilter)
+						continue;
+					if(refilter == 1 && sfilter.selectedIndex > 0)
+						continue;
+					for(var i = sfilter.options.length -1; i>0;i--)
+						sfilter.remove(i);
+					for(var i = 0; i< sfilterorg.options.length; i++){
+						var opt = sfilterorg.options[i];
+						if(showIds[fi].indexOf(opt.value) > -1){
+							var newopt = new Option(opt.text,opt.value);
+							newopt.selected = opt.selected;
+							sfilter.add(newopt);
+						}
+					}
+				}
+			}			
+        } catch (e) {
+            alert("CTable.OnChangeFilter(): " + e);
+        }
+    }
+co = function (tableId,columnIndex,numberIndex) {
+		var Table = document.getElementById(tableId);
+		var index = numberIndex;
+		var ths = Table.getElementsByTagName("th");
+		if(index == null)
+			index = 0;
+		var th = ths[columnIndex];
+		var order = th.getAttribute("order");
+		for(var i=0; i< ths.length - 1; i++)
+		{
+			
+			var span = document.getElementById(tableId + '_orderInfo_' + i);
+			var spans = span.getElementsByTagName('span');
+			if(spans && spans.length ==2)
+			{
+				spans[0].innerHTML = '';
+				spans[1].innerHTML = '';
+				if(i == columnIndex)
+					spans[numberIndex].innerHTML = order>0?'&#9650;':'&#9660;';
+			}
+		}
+		for(var i = 2;i< Table.rows.length-2;i=i+2)
+		{
+			for(var j = i+2;j< Table.rows.length;j=j+2)
+			{
+				var row_1 = Table.rows[i];
+				var row_1_info = Table.rows[i+1];
+				var row_2 = Table.rows[j];
+				var row_2_info = Table.rows[j+1];
+				var cell_1 = row_1.cells[columnIndex];
+				var cell_2 = row_2.cells[columnIndex];
+				
+				n1 = CTable.GetNumber(cell_1);
+				n2 = CTable.GetNumber(cell_2);
+				var change = false;
+
+				if(columnIndex == ths.length -1)
+				{
+					var n1 = Number(row_1.getAttribute("oriorder"));
+					var n2 = Number(row_2.getAttribute("oriorder"));
+					change = n1>n2;
+				}
+				else
+				{
+					var c1 = row_1.cells[0].firstChild.className.replace("my","");
+					var c2 = row_2.cells[0].firstChild.className.replace("my","");
+					var s1 = cell_1.textContent;
+					var s2 = cell_2.textContent;
+					var cc = CompareString(c1,c2);
+					if(cc < 0)
+						change = false;
+					else if(cc > 0)
+						change = true;
+					else 
+					{
+						if(n1 && n2 && n1.length > 0 && n2.length > 0)
+						{
+							var number_1 = n1[index] * order;
+							var number_2 = n2[index] * order;
+							change = number_1 > number_2;
+						}
+						else
+							change = (CompareString(s1,s2) == order);
+					}
+				}
+				
+				if(change)
+				{
+					row_2.parentNode.insertBefore(row_2,row_1);
+					row_2_info.parentNode.insertBefore(row_2_info,row_1);
+				}
+			}			
+			Table.rows[i].className = "row" + (i/2) % 2;
+			Table.rows[i+1].className = Table.rows[i].className;
+		}
+		th.setAttribute("order",-1*order);
+	}
+sd = function (rowid,activeRows)
+	{
+		var row = document.getElementById(rowid);
+		var cell = row.cells[0];
+		var button = row.previousSibling.getElementsByTagName('input')[0];
+		activeRows = activeRows||[];
+		if(cell)
+		{
+			if(row.style.display == '')
+			{
+				button.value = '显示';
+				row.style.display = 'none';
+			}
+			else
+			{
+				button.value = '隐藏';
+				row.style.display = '';
+			}
+			var table = cell.getElementsByTagName('table')[0];
+			if(table.rows.length <= 1)
+			{
+				if(activeRows.length > 0)
+				{
+					debugger;
+					var ids = activeRows[0].split('_');
+					var level = Number(ids[1]);
+					var ac = table.insertRow(-1).insertCell(-1);
+					ac.colSpan = '3';
+					ac.innerHTML = '<hr/><br />层 ' + level + '<br /><hr/>';
+					for(var i = 0;i<activeRows.length;i++)
+					{
+						ids = activeRows[i].split('_');
+						var newlevel = Number(ids[1]);
+						if(newlevel != level)
+						{
+							ac = table.insertRow(-1).insertCell(-1);
+							ac.colSpan = '3';
+							ac.innerHTML = '<hr/><br />层 ' + newlevel + '<br /><hr/>';
+							level = newlevel;
+						}
+						var theRow = document.getElementById(activeRows[i]).cloneNode(true);
+						if(theRow)
+						{
+							table.appendChild(theRow);
+							var c = table.insertRow(-1).insertCell(-1);
+							c.colSpan = '3';
+							c.innerHTML = '<hr/>';
+						}
+					}
+				}
+			}			
+
+		}
+		
+	}
+st = function (id){
+		var statdiv = document.getElementById('stat_all');
+		var tabs = statdiv.getAttribute('tabs').split(',');
+		var showall = false;
+		var lishowall = document.getElementById('tab_showall');
+		var lihideall = document.getElementById('tab_hideall');
+		lishowall.className = 'not_selected';
+		lihideall.className = 'not_selected';
+		for(var i = 0; i< tabs.length;i++)
+		{
+			var tabid = tabs[i];
+			var tab = document.getElementById(tabid);
+			var li = document.getElementById('tab_' + tabid);
+			li.className = 'not_selected';
+			if(id == 'showall')
+			{
+				lishowall.className = 'selected';
+				tab.style.display = '';
+			}
+			else if (id == 'hideall')
+			{
+				lihideall.className = 'selected';
+				tab.style.display = 'none';
+			}
+			else
+			{
+				if(tabid == id)
+				{
+					tab.style.display = '';
+					li.className = 'selected';
+				}
+				else
+				{
+					tab.style.display = 'none';
+					li.className = 'not_selected';
+				}
+			}
+
+		}
+	}
+</script><style type="text/css">div.stat_all {font-size:14px;} div.stat_header {margin:1em auto 0.5em auto;} span.stat_title {margin: auto 1em auto 0em; font-size:20px; font-weight:bold; color:#FFF;} span.clickable {cursor:pointer;} span.pair_value {width:100%; font-size:12px;} span.pair_value span {width:50%; min-width:3em; text-align:right; color:#F8A400;} span.pair_value span + span {color:#00CC00;} table.pair_hero {width:100%; font-size:12px;} table.pair_hero td {width:50%; min-width:3em; text-align:right; color:#00CC00;} table.pair_hero td + td {color:#F8A400;} table[hide] {display:none;} table.pair_value {width:100%;} table.pair_value td {width:50%; min-width:3em; text-align:right; color:#F8A400;} table.pair_value td + td {color:#00CC00;} </style>
+</head>
+<body>
+<form action="/wod/spiel//dungeon/report.php?session_hero_id=111373&amp;is_popup=1" name="the_form" accept-charset="UTF-8" method="post"> <input name="session_hero_id" value="111373" type="hidden"><input name="wod_post_id" value="x08zl0flltr1izendcw2dt4yjajthn5r" type="hidden"><input name="wod_post_world" value="CC" type="hidden"><input name="IS_POPUP" value="1" type="hidden">
+
+          <div style="height: 100%">
+
+<input name="cur_rep_id" value="2317966" type="hidden">
+<input name="report_id[0]" value="2317966" type="hidden">
+<input name="nr" value="" type="hidden">
+
+<input name="current_level" value="3" type="hidden">
+
+
+<h1>战报: <i>最后归宿旅店</i></h1>
+
+<p>
+ <input onclick="document.location.href='../../indexAll.html';" name="overview" value="摘要" class="button clickable" type="button"> <input onclick="document.location.href='statistics.html';" name="stats[0]" value="统计表" class="button clickable" type="button"> <input onclick="document.location.href='items.html';" name="items[0]" value="获得物品" class="button clickable" type="button"> <input name="disabled" value="详细资料" class="button_disabled" type="button"></p>
+
+
+
+<div tabs="stat_ini,stat_buff,stat_buffed" class="stat_all tab" id="stat_all"><ul><li class="selected" id="tab_stat_ini"><a onclick="st('stat_ini');" href="#">先攻权</a></li><li class="not_selected" id="tab_stat_buff"><a onclick="st('stat_buff');" href="#">给予增益</a></li><li class="not_selected" id="tab_stat_buffed"><a onclick="st('stat_buffed');" href="#">接受增益</a></li><li id="tab_showall" class="not_selected"><a onclick="st('showall');" href="#" id="show_all_a">全部显示</a></li><li id="tab_hideall" class="not_selected"><a onclick="st('hideall');" href="#" id="show_all_a">全部隐藏</a></li></ul><div class="bar" id="stat_bar"></div><div class="content" id="stat_ini"><div style="text-align: center;" class="stat_header"><span onclick="ct('table_stat_ini');" class="stat_title clickable">先攻权</span></div><table id="table_stat_ini" style="margin: 0px auto;" class="content_table"><tbody><tr class="content_table_header"><th order="-1" id="th_stat_ini0" class="content_table stat_order"><span id="stat_ini_col0">人物<span class="pair_hero" id="table_stat_ini_orderInfo_0"><span></span><span></span></span></span><table class="pair_hero"><tbody><tr><td><input onclick="cf('table_stat_ini','filter_stat_ini');" id="table_stat_ini_checkbox_0_0" value="0" type="checkbox">英雄</td><td><input onclick="cf('table_stat_ini','filter_stat_ini');" id="table_stat_ini_checkbox_0_1" value="1" type="checkbox">对手</td></tr></tbody></table></th><th order="-1" id="th_stat_ini1" class="content_table stat_order"><span onclick="co('table_stat_ini',1,0);" class="clickable" id="stat_ini_col1">平均值<span id="table_stat_ini_orderInfo_1"><span></span><span></span></span></span></th><th order="-1" id="th_stat_ini2" class="content_table stat_order"><span onclick="co('table_stat_ini',2,0);" class="clickable" id="stat_ini_col2">次数<span id="table_stat_ini_orderInfo_2"><span></span><span></span></span></span></th><th order="-1" id="th_stat_ini3" class="content_table stat_order"><span onclick="co('table_stat_ini',3,0);" class="clickable" id="stat_ini_col3">Max值<span id="table_stat_ini_orderInfo_3"><span></span><span></span></span></span></th><th order="-1" id="th_stat_ini4" class="content_table stat_order"><span onclick="co('table_stat_ini',4,0);" class="clickable" id="stat_ini_col4">Min值<span id="table_stat_ini_orderInfo_4"><span></span><span></span></span></span></th><th order="-1" id="th_stat_ini5" class="content_table stat_order"><span onclick="co('table_stat_ini',5,0);" class="clickable" id="stat_ini_col5">STD值<span id="table_stat_ini_orderInfo_5"><span></span><span></span></span></span></th><th order="-1" id="th_stat_ini6" class="content_table stat_order"><span onclick="co('table_stat_ini',6,0);" class="clickable" id="stat_ini_col6">数值列表<span id="table_stat_ini_orderInfo_6"><span></span><span></span></span></span></th></tr><tr class="content_table_filter_row" id="filter_stat_ini"><td><select onchange="cf('table_stat_ini','filter_stat_ini');" id="filter_stat_ini_combobox_0"><option value="0_all">全部</option><option value="0_0">慢慢</option></select><select style="display: none;" onchange="cf('table_stat_ini','filter_stat_ini');" id="org_filter_stat_ini_combobox_0"><option value="0_all">全部</option><option value="0_0">慢慢</option></select></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td><input size="6" type="text"></td><td style="text-align: center;"><input onclick="cf('table_stat_ini','filter_stat_ini');" class="button" value="查询" id="filter_stat_ini_button" type="button"></td></tr><tr id="0_0,1_-1,2_-1,3_-1,4_-1,5_-1,6_-1" oriorder="0" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',117882)" href="#">慢慢</a></td><td style="text-align: right;" class="content_table">95.00</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: right;" class="content_table">95</td><td style="text-align: right;" class="content_table">95</td><td style="text-align: right;" class="content_table">0</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_ini_0',['activeRow_3_1_0_10']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_ini_0" class="row0"><td colspan="7"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"><span>95</span></td></tr></tbody></table></td></tr></tbody></table></div><div style="display: none;" class="content" id="stat_buff"><div style="text-align: center;" class="stat_header"><span onclick="ct('table_stat_buff');" class="stat_title clickable">给予增益</span></div><table id="table_stat_buff" style="margin: 0px auto;" class="content_table"><tbody><tr class="content_table_header"><th order="-1" id="th_stat_buff0" class="content_table stat_order"><span id="stat_buff_col0">人物<span class="pair_hero" id="table_stat_buff_orderInfo_0"><span></span><span></span></span></span><table class="pair_hero"><tbody><tr><td><input onclick="cf('table_stat_buff','filter_stat_buff');" id="table_stat_buff_checkbox_0_0" value="0" type="checkbox">英雄</td><td><input onclick="cf('table_stat_buff','filter_stat_buff');" id="table_stat_buff_checkbox_0_1" value="1" type="checkbox">对手</td></tr></tbody></table></th><th order="-1" id="th_stat_buff1" class="content_table stat_order"><span onclick="co('table_stat_buff',1,0);" class="clickable" id="stat_buff_col1">技能<span id="table_stat_buff_orderInfo_1"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buff2" class="content_table stat_order"><span onclick="co('table_stat_buff',2,0);" class="clickable" id="stat_buff_col2">物品<span id="table_stat_buff_orderInfo_2"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buff3" class="content_table stat_order"><span onclick="co('table_stat_buff',3,0);" class="clickable" id="stat_buff_col3">增益类型<span id="table_stat_buff_orderInfo_3"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buff4" class="content_table stat_order"><span onclick="co('table_stat_buff',4,0);" class="clickable" id="stat_buff_col4">次数<span id="table_stat_buff_orderInfo_4"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buff5" class="content_table stat_order"><span onclick="co('table_stat_buff',5,0);" class="clickable" id="stat_buff_col5">详细列表<span id="table_stat_buff_orderInfo_5"><span></span><span></span></span></span></th></tr><tr class="content_table_filter_row" id="filter_stat_buff"><td><select onchange="cf('table_stat_buff','filter_stat_buff');" id="filter_stat_buff_combobox_0"><option value="0_all">全部</option><option value="0_0">暴风.铁锤</option><option value="0_1">床前明月光</option><option value="0_2">后排人呢</option><option value="0_3">后天</option><option value="0_4">来一发</option><option value="0_5">马奇特猫头鹰（维护者）</option><option value="0_6">慢慢</option><option value="0_7">先祖之怒</option><option value="0_8">小麦</option><option value="0_9">wowo2107</option></select><select style="display: none;" onchange="cf('table_stat_buff','filter_stat_buff');" id="org_filter_stat_buff_combobox_0"><option value="0_all">全部</option><option value="0_0">暴风.铁锤</option><option value="0_1">床前明月光</option><option value="0_2">后排人呢</option><option value="0_3">后天</option><option value="0_4">来一发</option><option value="0_5">马奇特猫头鹰（维护者）</option><option value="0_6">慢慢</option><option value="0_7">先祖之怒</option><option value="0_8">小麦</option><option value="0_9">wowo2107</option></select></td><td><select onchange="cf('table_stat_buff','filter_stat_buff');" id="filter_stat_buff_combobox_1"><option value="1_all">全部</option><option value="1_0">法力增效试剂</option><option value="1_1">苦修</option><option value="1_2">冥想</option><option value="1_3">启示</option><option value="1_4">群体保护光环</option><option value="1_5">入神之舞</option><option value="1_6">熊之愤怒</option><option value="1_7">虚招</option></select><select style="display: none;" onchange="cf('table_stat_buff','filter_stat_buff');" id="org_filter_stat_buff_combobox_1"><option value="1_all">全部</option><option value="1_0">法力增效试剂</option><option value="1_1">苦修</option><option value="1_2">冥想</option><option value="1_3">启示</option><option value="1_4">群体保护光环</option><option value="1_5">入神之舞</option><option value="1_6">熊之愤怒</option><option value="1_7">虚招</option></select></td><td><select onchange="cf('table_stat_buff','filter_stat_buff');" id="filter_stat_buff_combobox_2"><option value="2_all">全部</option><option value="2_0"></option><option value="2_1">蓝色丝绸肩带</option><option value="2_2">熊头饰</option></select><select style="display: none;" onchange="cf('table_stat_buff','filter_stat_buff');" id="org_filter_stat_buff_combobox_2"><option value="2_all">全部</option><option value="2_0"></option><option value="2_1">蓝色丝绸肩带</option><option value="2_2">熊头饰</option></select></td><td><select onchange="cf('table_stat_buff','filter_stat_buff');" id="filter_stat_buff_combobox_3"><option value="3_all">全部</option><option value="3_0">回合前</option></select><select style="display: none;" onchange="cf('table_stat_buff','filter_stat_buff');" id="org_filter_stat_buff_combobox_3"><option value="3_all">全部</option><option value="3_0">回合前</option></select></td><td><input size="6" type="text"></td><td style="text-align: center;"><input onclick="cf('table_stat_buff','filter_stat_buff');" class="button" value="查询" id="filter_stat_buff_button" type="button"></td></tr><tr id="0_0,1_7,2_0,3_0,4_-1,5_-1" oriorder="0" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',111293)" href="#">暴风.铁锤</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E8%99%9A%E6%8B%9B');" href="#">虚招</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buff_0',['activeRow_3_1_0_6']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buff_0" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_1,1_1,2_0,3_0,4_-1,5_-1" oriorder="1" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_myhero" kind="0" onclick="return jump('h',111373)" href="#">床前明月光</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E8%8B%A6%E4%BF%AE');" href="#">苦修</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buff_1',['activeRow_3_1_0_9']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buff_1" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_2,1_4,2_0,3_0,4_-1,5_-1" oriorder="2" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',111091)" href="#">后排人呢</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E7%BE%A4%E4%BD%93%E4%BF%9D%E6%8A%A4%E5%85%89%E7%8E%AF');" href="#">群体保护光环</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buff_2',['activeRow_3_1_0_1']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buff_2" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_3,1_7,2_0,3_0,4_-1,5_-1" oriorder="3" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',112891)" href="#">后天</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E8%99%9A%E6%8B%9B');" href="#">虚招</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buff_3',['activeRow_3_1_0_4']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buff_3" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_4,1_1,2_0,3_0,4_-1,5_-1" oriorder="4" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',114022)" href="#">来一发</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E8%8B%A6%E4%BF%AE');" href="#">苦修</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buff_4',['activeRow_3_1_0_7']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buff_4" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_5,1_3,2_0,3_0,4_-1,5_-1" oriorder="5" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return o('n','%E9%A9%AC%E5%A5%87%E7%89%B9%E7%8C%AB%E5%A4%B4%E9%B9%B0%EF%BC%88%E7%BB%B4%E6%8A%A4%E8%80%85%EF%BC%89');" href="#">马奇特猫头鹰（维护者）</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E5%90%AF%E7%A4%BA');" href="#">启示</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buff_5',['activeRow_3_1_0_0']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buff_5" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_6,1_5,2_1,3_0,4_-1,5_-1" oriorder="6" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',117882)" href="#">慢慢</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E5%85%A5%E7%A5%9E%E4%B9%8B%E8%88%9E');" href="#">入神之舞</a></td><td style="text-align: left;" class="content_table"><span><a class="report  rep_uni item_unique rep_group item_group_item" kind="-1" onclick="return o('i','%E8%93%9D%E8%89%B2%E4%B8%9D%E7%BB%B8%E8%82%A9%E5%B8%A6');" href="#">蓝色丝绸肩带</a></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buff_6',['activeRow_3_1_0_8']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buff_6" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_7,1_6,2_2,3_0,4_-1,5_-1" oriorder="7" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',111264)" href="#">先祖之怒</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E7%86%8A%E4%B9%8B%E6%84%A4%E6%80%92');" href="#">熊之愤怒</a></td><td style="text-align: left;" class="content_table"><span><a class="report  rep_uni item_unique rep_group item_group_item" kind="-1" onclick="return o('i','%E7%86%8A%E5%A4%B4%E9%A5%B0');" href="#">熊头饰</a></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buff_7',['activeRow_3_1_0_3']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buff_7" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_8,1_0,2_0,3_0,4_-1,5_-1" oriorder="8" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',114035)" href="#">小麦</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E6%B3%95%E5%8A%9B%E5%A2%9E%E6%95%88%E8%AF%95%E5%89%82');" href="#">法力增效试剂</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buff_8',['activeRow_3_1_0_5']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buff_8" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_9,1_2,2_0,3_0,4_-1,5_-1" oriorder="9" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',111078)" href="#">wowo2107</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E5%86%A5%E6%83%B3');" href="#">冥想</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buff_9',['activeRow_3_1_0_2']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buff_9" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr></tbody></table></div><div style="display: none;" class="content" id="stat_buffed"><div style="text-align: center;" class="stat_header"><span onclick="ct('table_stat_buffed');" class="stat_title clickable">接受增益</span></div><table id="table_stat_buffed" style="margin: 0px auto;" class="content_table"><tbody><tr class="content_table_header"><th order="-1" id="th_stat_buffed0" class="content_table stat_order"><span id="stat_buffed_col0">人物<span class="pair_hero" id="table_stat_buffed_orderInfo_0"><span></span><span></span></span></span><table class="pair_hero"><tbody><tr><td><input onclick="cf('table_stat_buffed','filter_stat_buffed');" id="table_stat_buffed_checkbox_0_0" value="0" type="checkbox">英雄</td><td><input onclick="cf('table_stat_buffed','filter_stat_buffed');" id="table_stat_buffed_checkbox_0_1" value="1" type="checkbox">对手</td></tr></tbody></table></th><th order="-1" id="th_stat_buffed1" class="content_table stat_order"><span onclick="co('table_stat_buffed',1,0);" class="clickable" id="stat_buffed_col1">技能<span id="table_stat_buffed_orderInfo_1"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buffed2" class="content_table stat_order"><span onclick="co('table_stat_buffed',2,0);" class="clickable" id="stat_buffed_col2">物品<span id="table_stat_buffed_orderInfo_2"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buffed3" class="content_table stat_order"><span onclick="co('table_stat_buffed',3,0);" class="clickable" id="stat_buffed_col3">增益类型<span id="table_stat_buffed_orderInfo_3"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buffed4" class="content_table stat_order"><span onclick="co('table_stat_buffed',4,0);" class="clickable" id="stat_buffed_col4">次数<span id="table_stat_buffed_orderInfo_4"><span></span><span></span></span></span></th><th order="-1" id="th_stat_buffed5" class="content_table stat_order"><span onclick="co('table_stat_buffed',5,0);" class="clickable" id="stat_buffed_col5">详细列表<span id="table_stat_buffed_orderInfo_5"><span></span><span></span></span></span></th></tr><tr class="content_table_filter_row" id="filter_stat_buffed"><td><select onchange="cf('table_stat_buffed','filter_stat_buffed');" id="filter_stat_buffed_combobox_0"><option value="0_all">全部</option><option value="0_0">暴风.铁锤</option><option value="0_1">床前明月光</option><option value="0_2">后排人呢</option><option value="0_3">后天</option><option value="0_4">来一发</option><option value="0_5">马奇特猫头鹰（维护者）</option><option value="0_6">慢慢</option><option value="0_7">先祖之怒</option><option value="0_8">小麦</option><option value="0_9">亚庇特·神眷者</option><option value="0_10">wowo2107</option><option value="0_11">xl</option></select><select style="display: none;" onchange="cf('table_stat_buffed','filter_stat_buffed');" id="org_filter_stat_buffed_combobox_0"><option value="0_all">全部</option><option value="0_0">暴风.铁锤</option><option value="0_1">床前明月光</option><option value="0_2">后排人呢</option><option value="0_3">后天</option><option value="0_4">来一发</option><option value="0_5">马奇特猫头鹰（维护者）</option><option value="0_6">慢慢</option><option value="0_7">先祖之怒</option><option value="0_8">小麦</option><option value="0_9">亚庇特·神眷者</option><option value="0_10">wowo2107</option><option value="0_11">xl</option></select></td><td><select onchange="cf('table_stat_buffed','filter_stat_buffed');" id="filter_stat_buffed_combobox_1"><option value="1_all">全部</option><option value="1_0">法力增效试剂</option><option value="1_1">苦修</option><option value="1_2">冥想</option><option value="1_3">启示</option><option value="1_4">群体保护光环</option><option value="1_5">入神之舞</option><option value="1_6">熊之愤怒</option><option value="1_7">虚招</option></select><select style="display: none;" onchange="cf('table_stat_buffed','filter_stat_buffed');" id="org_filter_stat_buffed_combobox_1"><option value="1_all">全部</option><option value="1_0">法力增效试剂</option><option value="1_1">苦修</option><option value="1_2">冥想</option><option value="1_3">启示</option><option value="1_4">群体保护光环</option><option value="1_5">入神之舞</option><option value="1_6">熊之愤怒</option><option value="1_7">虚招</option></select></td><td><select onchange="cf('table_stat_buffed','filter_stat_buffed');" id="filter_stat_buffed_combobox_2"><option value="2_all">全部</option><option value="2_0"></option><option value="2_1">蓝色丝绸肩带</option><option value="2_2">熊头饰</option></select><select style="display: none;" onchange="cf('table_stat_buffed','filter_stat_buffed');" id="org_filter_stat_buffed_combobox_2"><option value="2_all">全部</option><option value="2_0"></option><option value="2_1">蓝色丝绸肩带</option><option value="2_2">熊头饰</option></select></td><td><select onchange="cf('table_stat_buffed','filter_stat_buffed');" id="filter_stat_buffed_combobox_3"><option value="3_all">全部</option><option value="3_0">回合前</option></select><select style="display: none;" onchange="cf('table_stat_buffed','filter_stat_buffed');" id="org_filter_stat_buffed_combobox_3"><option value="3_all">全部</option><option value="3_0">回合前</option></select></td><td><input size="6" type="text"></td><td style="text-align: center;"><input onclick="cf('table_stat_buffed','filter_stat_buffed');" class="button" value="查询" id="filter_stat_buffed_button" type="button"></td></tr><tr id="0_0,1_0,2_0,3_0,4_-1,5_-1" oriorder="0" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',111293)" href="#">暴风.铁锤</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E6%B3%95%E5%8A%9B%E5%A2%9E%E6%95%88%E8%AF%95%E5%89%82');" href="#">法力增效试剂</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_0',['activeRow_3_1_0_5']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_0" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_0,1_3,2_0,3_0,4_-1,5_-1" oriorder="1" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',111293)" href="#">暴风.铁锤</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E5%90%AF%E7%A4%BA');" href="#">启示</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_1',['activeRow_3_1_0_0']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_1" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_0,1_4,2_0,3_0,4_-1,5_-1" oriorder="2" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',111293)" href="#">暴风.铁锤</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E7%BE%A4%E4%BD%93%E4%BF%9D%E6%8A%A4%E5%85%89%E7%8E%AF');" href="#">群体保护光环</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_2',['activeRow_3_1_0_1']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_2" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_0,1_7,2_0,3_0,4_-1,5_-1" oriorder="3" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',111293)" href="#">暴风.铁锤</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E8%99%9A%E6%8B%9B');" href="#">虚招</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_3',['activeRow_3_1_0_6']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_3" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_1,1_0,2_0,3_0,4_-1,5_-1" oriorder="4" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_myhero" kind="0" onclick="return jump('h',111373)" href="#">床前明月光</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E6%B3%95%E5%8A%9B%E5%A2%9E%E6%95%88%E8%AF%95%E5%89%82');" href="#">法力增效试剂</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_4',['activeRow_3_1_0_5']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_4" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_1,1_1,2_0,3_0,4_-1,5_-1" oriorder="5" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_myhero" kind="0" onclick="return jump('h',111373)" href="#">床前明月光</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E8%8B%A6%E4%BF%AE');" href="#">苦修</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_5',['activeRow_3_1_0_9']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_5" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_2,1_3,2_0,3_0,4_-1,5_-1" oriorder="6" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',111091)" href="#">后排人呢</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E5%90%AF%E7%A4%BA');" href="#">启示</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_6',['activeRow_3_1_0_0']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_6" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_3,1_0,2_0,3_0,4_-1,5_-1" oriorder="7" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',112891)" href="#">后天</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E6%B3%95%E5%8A%9B%E5%A2%9E%E6%95%88%E8%AF%95%E5%89%82');" href="#">法力增效试剂</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_7',['activeRow_3_1_0_5']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_7" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_3,1_3,2_0,3_0,4_-1,5_-1" oriorder="8" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',112891)" href="#">后天</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E5%90%AF%E7%A4%BA');" href="#">启示</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_8',['activeRow_3_1_0_0']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_8" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_3,1_4,2_0,3_0,4_-1,5_-1" oriorder="9" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',112891)" href="#">后天</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E7%BE%A4%E4%BD%93%E4%BF%9D%E6%8A%A4%E5%85%89%E7%8E%AF');" href="#">群体保护光环</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_9',['activeRow_3_1_0_1']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_9" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_3,1_7,2_0,3_0,4_-1,5_-1" oriorder="10" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',112891)" href="#">后天</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E8%99%9A%E6%8B%9B');" href="#">虚招</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_10',['activeRow_3_1_0_4']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_10" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_4,1_0,2_0,3_0,4_-1,5_-1" oriorder="11" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',114022)" href="#">来一发</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E6%B3%95%E5%8A%9B%E5%A2%9E%E6%95%88%E8%AF%95%E5%89%82');" href="#">法力增效试剂</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_11',['activeRow_3_1_0_5']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_11" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_4,1_1,2_0,3_0,4_-1,5_-1" oriorder="12" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',114022)" href="#">来一发</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E8%8B%A6%E4%BF%AE');" href="#">苦修</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_12',['activeRow_3_1_0_7']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_12" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_4,1_4,2_0,3_0,4_-1,5_-1" oriorder="13" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',114022)" href="#">来一发</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E7%BE%A4%E4%BD%93%E4%BF%9D%E6%8A%A4%E5%85%89%E7%8E%AF');" href="#">群体保护光环</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_13',['activeRow_3_1_0_1']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_13" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_5,1_3,2_0,3_0,4_-1,5_-1" oriorder="14" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return o('n','%E9%A9%AC%E5%A5%87%E7%89%B9%E7%8C%AB%E5%A4%B4%E9%B9%B0%EF%BC%88%E7%BB%B4%E6%8A%A4%E8%80%85%EF%BC%89');" href="#">马奇特猫头鹰（维护者）</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E5%90%AF%E7%A4%BA');" href="#">启示</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_14',['activeRow_3_1_0_0']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_14" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_5,1_4,2_0,3_0,4_-1,5_-1" oriorder="15" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return o('n','%E9%A9%AC%E5%A5%87%E7%89%B9%E7%8C%AB%E5%A4%B4%E9%B9%B0%EF%BC%88%E7%BB%B4%E6%8A%A4%E8%80%85%EF%BC%89');" href="#">马奇特猫头鹰（维护者）</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E7%BE%A4%E4%BD%93%E4%BF%9D%E6%8A%A4%E5%85%89%E7%8E%AF');" href="#">群体保护光环</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_15',['activeRow_3_1_0_1']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_15" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_6,1_3,2_0,3_0,4_-1,5_-1" oriorder="16" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',117882)" href="#">慢慢</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E5%90%AF%E7%A4%BA');" href="#">启示</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_16',['activeRow_3_1_0_0']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_16" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_6,1_4,2_0,3_0,4_-1,5_-1" oriorder="17" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',117882)" href="#">慢慢</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E7%BE%A4%E4%BD%93%E4%BF%9D%E6%8A%A4%E5%85%89%E7%8E%AF');" href="#">群体保护光环</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_17',['activeRow_3_1_0_1']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_17" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_6,1_5,2_1,3_0,4_-1,5_-1" oriorder="18" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',117882)" href="#">慢慢</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E5%85%A5%E7%A5%9E%E4%B9%8B%E8%88%9E');" href="#">入神之舞</a></td><td style="text-align: left;" class="content_table"><span><a class="report  rep_uni item_unique rep_group item_group_item" kind="-1" onclick="return o('i','%E8%93%9D%E8%89%B2%E4%B8%9D%E7%BB%B8%E8%82%A9%E5%B8%A6');" href="#">蓝色丝绸肩带</a></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_18',['activeRow_3_1_0_8']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_18" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_7,1_4,2_0,3_0,4_-1,5_-1" oriorder="19" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',111264)" href="#">先祖之怒</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E7%BE%A4%E4%BD%93%E4%BF%9D%E6%8A%A4%E5%85%89%E7%8E%AF');" href="#">群体保护光环</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_19',['activeRow_3_1_0_1']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_19" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_7,1_6,2_2,3_0,4_-1,5_-1" oriorder="20" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',111264)" href="#">先祖之怒</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E7%86%8A%E4%B9%8B%E6%84%A4%E6%80%92');" href="#">熊之愤怒</a></td><td style="text-align: left;" class="content_table"><span><a class="report  rep_uni item_unique rep_group item_group_item" kind="-1" onclick="return o('i','%E7%86%8A%E5%A4%B4%E9%A5%B0');" href="#">熊头饰</a></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_20',['activeRow_3_1_0_3']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_20" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_8,1_0,2_0,3_0,4_-1,5_-1" oriorder="21" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',114035)" href="#">小麦</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E6%B3%95%E5%8A%9B%E5%A2%9E%E6%95%88%E8%AF%95%E5%89%82');" href="#">法力增效试剂</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_21',['activeRow_3_1_0_5']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_21" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_9,1_0,2_0,3_0,4_-1,5_-1" oriorder="22" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',111149)" href="#">亚庇特·神眷者</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E6%B3%95%E5%8A%9B%E5%A2%9E%E6%95%88%E8%AF%95%E5%89%82');" href="#">法力增效试剂</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_22',['activeRow_3_1_0_5']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_22" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_10,1_2,2_0,3_0,4_-1,5_-1" oriorder="23" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',111078)" href="#">wowo2107</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E5%86%A5%E6%83%B3');" href="#">冥想</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_23',['activeRow_3_1_0_2']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_23" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_10,1_4,2_0,3_0,4_-1,5_-1" oriorder="24" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',111078)" href="#">wowo2107</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E7%BE%A4%E4%BD%93%E4%BF%9D%E6%8A%A4%E5%85%89%E7%8E%AF');" href="#">群体保护光环</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_24',['activeRow_3_1_0_1']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_24" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_11,1_3,2_0,3_0,4_-1,5_-1" oriorder="25" class="row1"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',110896)" href="#">xl</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E5%90%AF%E7%A4%BA');" href="#">启示</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_25',['activeRow_3_1_0_0']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_25" class="row1"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr><tr id="0_11,1_4,2_0,3_0,4_-1,5_-1" oriorder="26" class="row0"><td style="text-align: left;" class="content_table"><a class="rep_hero" kind="0" onclick="return jump('h',110896)" href="#">xl</a></td><td style="text-align: left;" class="content_table"><a kind="-1" onclick="return o('s','%E7%BE%A4%E4%BD%93%E4%BF%9D%E6%8A%A4%E5%85%89%E7%8E%AF');" href="#">群体保护光环</a></td><td style="text-align: left;" class="content_table"><span></span></td><td style="text-align: left;" class="content_table">回合前</td><td style="text-align: right;" class="content_table">1</td><td style="text-align: center;" class="content_table"><input onclick="sd('table_stat_buffed_26',['activeRow_3_1_0_1']);" value="显示" class="button" type="button"></td></tr><tr style="display: none;" id="table_stat_buffed_26" class="row0"><td colspan="6"><table style="width: 100%;"><tbody><tr><td style="text-align: center;" colspan="3"></td></tr></tbody></table></td></tr></tbody></table></div><hr></div><h2>2015年8月9日 15:46 - 第一道门</h2>
+
+    
+        
+
+
+<table class="content_table" width="100%">
+ <tbody><tr class="row0">
+ <td>
+
+<p class="navigation levels">
+ <i><a name="1">层  3</a>
+    </i>
+
+ &nbsp;&nbsp;
+
+ <input onclick="document.location.href='level1.html';" name="level[1]" value="层  1" class="button clickable" type="button"> <input onclick="document.location.href='level2.html';" name="level[2]" value="层  2" class="button clickable" type="button"> <input name="disabled" value="层  3" class="button_disabled" type="button"> <input onclick="document.location.href='level4.html';" name="level[4]" value="层  4" class="button clickable" type="button"> <input onclick="document.location.href='level5.html';" name="level[5]" value="层  5" class="button clickable" type="button"> <input onclick="document.location.href='level6.html';" name="level[6]" value="层  6" class="button clickable" type="button"> <input onclick="document.location.href='level7.html';" name="level[7]" value="层  7" class="button clickable" type="button"> <input onclick="document.location.href='level8.html';" name="level[8]" value="层  8" class="button clickable" type="button"></p>
+
+ <p class="navigation in_report">
+          =返回=
+              <a href="#end">=下一步=</a>         
+     <a href="#1">=最后回合=</a> 
+    
+    
+ </p>
+
+
+
+    <h3><a name="1">老人</a></h3>
+	<p class="rep_level_description">你到达老人身边。“请坐，冒险者们，我是芝胡兰。我是格拉兹星球——这是这个地方的名字——的统治者。但是一个不同寻常的家伙夺走了我的财产。现在，我坐在这个大门内，每天都在等待着勇敢的冒险者来帮助我夺回我失去的一切，并驱逐这里的邪恶。”</p>
+
+
+
+
+<!-- computed by wod on 2015-08-09 at 09:46:34 (combat service build time: Jul 31 2015  18:08:08) -->
+<hr>
+<p class="rep_round_headline">回合 1</p>
+<hr>
+<p class="rep_status_headline">进攻者:</p>
+
+<table class="rep_status_table">
+<tbody><tr>
+<th></th>
+<th>名称</th>
+<th>等级</th>
+<th>位置</th>
+<th>体力</th>
+<th class="resource">Resource</th>
+<th>状态</th>
+</tr>
+<tr>
+<td class="number">1</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>一小把药草:</b><br />力量 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />体质 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />智力 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />灵巧 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />魅力 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />敏捷 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />感知 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />意志 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />先攻 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />体力回复 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span> (法力)<br /><br /><b>圣武士光环:</b><br />护甲 毒素伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />护甲 穿刺伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />护甲 闪电伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />护甲 寒冰伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />护甲 火焰伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />护甲 酸性伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />护甲 心灵伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />体力回复 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.25</span></span><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span> (法力)<br />护甲 粉碎伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />护甲 切割伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />伤害 神圣伤害 <span class=\'rep_bonus bonus_neutral\'>+0</span>/<span class=\'rep_bonus bonus_positive\'>+0<span class=\'rep_decimal\'>.90</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span> (近战)')"><a href="#" onclick="return jump('h',111091)" class="rep_hero" x="111091">后排人呢</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>18</td>
+<td class="position">前排</td>
+<td>134</td>
+<td class="resource">75 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">2</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>苦修:</b><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span> (法力)<br />技能 大吃一顿 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span><br />技能 豪饮 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span><br />法力 <span class=\'rep_bonus bonus_positive\'>+12<span class=\'rep_decimal\'>.00</span></span> (法力)')"><a href="#" onclick="return jump('h',111078)" class="rep_hero" x="111078">wowo2107</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>18</td>
+<td class="position">中间</td>
+<td>28</td>
+<td class="resource">79 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">3</td>
+<td class="hero"><a href="#" onclick="return jump('h',111149)" class="rep_hero" x="111149">亚庇特·神眷者</a>
+</td>
+<td>18</td>
+<td class="position">中间</td>
+<td>74</td>
+<td class="resource">24 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">4</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>红花瓣（小盆）:</b><br />先攻 <span class=\'rep_bonus bonus_positive\'>+8<span class=\'rep_decimal\'>.84</span></span><br />敏捷 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.20</span></span><br /><br /><b>苦修:</b><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.00</span></span> (法力)<br />技能 大吃一顿 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span><br />技能 豪饮 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span><br />法力 <span class=\'rep_bonus bonus_positive\'>+9<span class=\'rep_decimal\'>.00</span></span> (法力)')"><a href="#" onclick="return jump('h',111264)" class="rep_hero" x="111264">先祖之怒</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>18</td>
+<td class="position">中间</td>
+<td>74</td>
+<td class="resource">15 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">5</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>红花瓣（小盆）:</b><br />先攻 <span class=\'rep_bonus bonus_positive\'>+8<span class=\'rep_decimal\'>.84</span></span><br />敏捷 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.20</span></span><br /><br /><b>心灵护盾:</b><br />法力回复 <span class=\'rep_bonus bonus_negative\'>-1<span class=\'rep_decimal\'>.00</span></span> (法力)<br />护甲 粉碎伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 切割伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 穿刺伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 酸性伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 毒素伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 闪电伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 火焰伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 寒冰伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 心灵伤害 <span class=\'rep_bonus bonus_positive\'>+7<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />意志 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.20</span></span><br />防御 魔法 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.00</span></span><br />护甲 奥术伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 黑暗伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br /><br /><b>永恒的星光:</b><br />防御 魔法 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.56</span></span><br />智力 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.40</span></span> (法力)<br />感知 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>')"><a href="#" onclick="return jump('h',112891)" class="rep_hero" x="112891">后天</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>18</td>
+<td class="position">中间</td>
+<td>40</td>
+<td class="resource">33 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">6</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>心灵护盾:</b><br />法力回复 <span class=\'rep_bonus bonus_negative\'>-1<span class=\'rep_decimal\'>.00</span></span> (法力)<br />护甲 粉碎伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 切割伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 穿刺伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 酸性伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 毒素伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 闪电伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 火焰伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 寒冰伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 心灵伤害 <span class=\'rep_bonus bonus_positive\'>+7<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />意志 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.20</span></span><br />防御 魔法 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.00</span></span><br />护甲 奥术伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 黑暗伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br /><br /><b>永恒的星光:</b><br />防御 魔法 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.56</span></span><br />智力 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.40</span></span> (法力)<br />感知 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>')"><a href="#" onclick="return jump('h',114035)" class="rep_hero" x="114035">小麦</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>17</td>
+<td class="position">中间</td>
+<td>44</td>
+<td class="resource">107 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">7</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>红花瓣（小盆）:</b><br />先攻 <span class=\'rep_bonus bonus_positive\'>+8<span class=\'rep_decimal\'>.84</span></span><br />敏捷 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.20</span></span>')"><a href="#" onclick="return jump('h',111373)" class="rep_myhero">床前明月光</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>18</td>
+<td class="position">中间</td>
+<td>31</td>
+<td class="resource">69 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">8</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>心灵护盾:</b><br />法力回复 <span class=\'rep_bonus bonus_negative\'>-1<span class=\'rep_decimal\'>.00</span></span> (法力)<br />护甲 粉碎伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 切割伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 穿刺伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 酸性伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 毒素伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 闪电伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 火焰伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 寒冰伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 心灵伤害 <span class=\'rep_bonus bonus_positive\'>+7<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />意志 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.20</span></span><br />防御 魔法 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.00</span></span><br />护甲 奥术伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 黑暗伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br /><br /><b>永恒的星光:</b><br />防御 魔法 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.56</span></span><br />智力 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.40</span></span> (法力)<br />感知 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>')"><a href="#" onclick="return jump('h',111293)" class="rep_hero" x="111293">暴风.铁锤</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>17</td>
+<td class="position">中间</td>
+<td>72</td>
+<td class="resource">44 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">9</td>
+<td class="hero"><a href="#" onclick="return jump('h',114022)" class="rep_hero" x="114022">来一发</a>
+</td>
+<td>18</td>
+<td class="position">中间</td>
+<td>32</td>
+<td class="resource">70 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">10</td>
+<td class="hero"><a href="#" onclick="return jump('h',110896)" class="rep_hero" x="110896">xl</a>
+</td>
+<td>18</td>
+<td class="position">后排</td>
+<td>179</td>
+<td class="resource">5 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">11</td>
+<td class="hero"><a href="#" onclick="return jump('h',117882)" class="rep_hero" x="117882">慢慢</a>
+</td>
+<td>18</td>
+<td class="position">后排</td>
+<td>56</td>
+<td class="resource">9 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">12</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'属于<b>先祖之怒</b>.')"><a href="#" class="rep_hero" onclick="return o('n','%E9%A9%AC%E5%A5%87%E7%89%B9%E7%8C%AB%E5%A4%B4%E9%B9%B0%EF%BC%88%E7%BB%B4%E6%8A%A4%E8%80%85%EF%BC%89');">马奇特猫头鹰（维护者）</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>16</td>
+<td class="position">后排</td>
+<td>33</td>
+<td class="resource">47 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">准备好</td></tr>
+</tbody></table>
+
+<hr>
+<p class="rep_status_headline">防御者:</p>
+
+<table class="rep_status_table">
+<tbody><tr>
+<th></th>
+<th>名称</th>
+<th>等级</th>
+<th>位置</th>
+<th>体力</th>
+<th class="resource">Resource</th>
+<th>状态</th>
+</tr>
+<tr><td></td><td colspan="6"><i>没有可交战的对手</i></td></tr>
+</tbody></table>
+
+<hr>
+<table>
+<tbody><tr id="activeRow_3_1_0_0"><td class="rep_initiative">&nbsp;</td>
+<td><span onmouseover="wodToolTip(this,'属于<b>先祖之怒</b>.')"><a href="#" class="rep_hero" onclick="return o('n','%E9%A9%AC%E5%A5%87%E7%89%B9%E7%8C%AB%E5%A4%B4%E9%B9%B0%EF%BC%88%E7%BB%B4%E6%8A%A4%E8%80%85%EF%BC%89');">马奇特猫头鹰（维护者）</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+使用<a href="#" onclick="return o('s','%E5%90%AF%E7%A4%BA');" onmouseover="wodToolTip(this,'防御 冲击 <span class=\'rep_bonus bonus_positive\'>+10<span class=\'rep_decimal\'>.50</span></span><br />防御 近战 <span class=\'rep_bonus bonus_positive\'>+13<span class=\'rep_decimal\'>.75</span></span><br />防御 远程 <span class=\'rep_bonus bonus_positive\'>+13<span class=\'rep_decimal\'>.75</span></span><br />防御 偷袭 <span class=\'rep_bonus bonus_positive\'>+10<span class=\'rep_decimal\'>.50</span></span><br />防御 爆破 <span class=\'rep_bonus bonus_positive\'>+10<span class=\'rep_decimal\'>.50</span></span><br />防御 触发陷阱 <span class=\'rep_bonus bonus_positive\'>+10<span class=\'rep_decimal\'>.50</span></span><br />防御 魔法弹 <span class=\'rep_bonus bonus_positive\'>+10<span class=\'rep_decimal\'>.50</span></span><br />防御 病毒 <span class=\'rep_bonus bonus_positive\'>+10<span class=\'rep_decimal\'>.50</span></span><br />防御 魔法 <span class=\'rep_bonus bonus_positive\'>+13<span class=\'rep_decimal\'>.75</span></span><br />防御 自然灾害 <span class=\'rep_bonus bonus_positive\'>+10<span class=\'rep_decimal\'>.50</span></span>')">启示<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></a> (<span class="rep_mana_cost">8 法力</span>)给</td><td><a href="#" onclick="return jump('h',111091)" class="rep_hero" x="111091">后排人呢</a>
+<br>自身<br><a href="#" onclick="return jump('h',117882)" class="rep_hero" x="117882">慢慢</a>
+<br><a href="#" onclick="return jump('h',110896)" class="rep_hero" x="110896">xl</a>
+<br><a href="#" onclick="return jump('h',111293)" class="rep_hero" x="111293">暴风.铁锤</a>
+<br><a href="#" onclick="return jump('h',112891)" class="rep_hero" x="112891">后天</a>
+</td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_3_1_0_1"><td class="rep_initiative">&nbsp;</td>
+<td><a href="#" onclick="return jump('h',111091)" class="rep_hero" x="111091">后排人呢</a>
+使用<a href="#" onclick="return o('s','%E7%BE%A4%E4%BD%93%E4%BF%9D%E6%8A%A4%E5%85%89%E7%8E%AF');" onmouseover="wodToolTip(this,'护甲 穿刺伤害 <span class=\'rep_bonus bonus_positive\'>+10<span class=\'rep_decimal\'>.50</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />护甲 切割伤害 <span class=\'rep_bonus bonus_positive\'>+10<span class=\'rep_decimal\'>.50</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />护甲 粉碎伤害 <span class=\'rep_bonus bonus_positive\'>+10<span class=\'rep_decimal\'>.50</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />防御 自然灾害 <span class=\'rep_bonus bonus_positive\'>+21<span class=\'rep_decimal\'>.00</span></span>')">群体保护光环<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></a> (<span class="rep_mana_cost">23 法力</span>)给</td><td><a href="#" onclick="return jump('h',110896)" class="rep_hero" x="110896">xl</a>
+<br><span onmouseover="wodToolTip(this,'属于<b>先祖之怒</b>.')"><a href="#" class="rep_hero" onclick="return o('n','%E9%A9%AC%E5%A5%87%E7%89%B9%E7%8C%AB%E5%A4%B4%E9%B9%B0%EF%BC%88%E7%BB%B4%E6%8A%A4%E8%80%85%EF%BC%89');">马奇特猫头鹰（维护者）</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+<br><a href="#" onclick="return jump('h',117882)" class="rep_hero" x="117882">慢慢</a>
+<br><a href="#" onclick="return jump('h',111293)" class="rep_hero" x="111293">暴风.铁锤</a>
+<br><a href="#" onclick="return jump('h',112891)" class="rep_hero" x="112891">后天</a>
+<br><a href="#" onclick="return jump('h',114022)" class="rep_hero" x="114022">来一发</a>
+<br><a href="#" onclick="return jump('h',111264)" class="rep_hero" x="111264">先祖之怒</a>
+<br><a href="#" onclick="return jump('h',111078)" class="rep_hero" x="111078">wowo2107</a>
+</td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_3_1_0_2"><td class="rep_initiative">&nbsp;</td>
+<td><a href="#" onclick="return jump('h',111078)" class="rep_hero" x="111078">wowo2107</a>
+使用<a href="#" onclick="return o('s','%E5%86%A5%E6%83%B3');" onmouseover="wodToolTip(this,'法力回复 <span class=\'rep_bonus bonus_positive\'>+39<span class=\'rep_decimal\'>.00</span></span> (法力)<br />行动次数 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span> <span class=\'rep_bonus bonus_negative\'>-100%</span><br />防御 近战 <span class=\'rep_bonus bonus_negative\'>-34%</span><br />防御 远程 <span class=\'rep_bonus bonus_negative\'>-25%</span><br />防御 魔法 <span class=\'rep_bonus bonus_negative\'>-5%</span><br />感知 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.08</span></span><br />防御 偷袭 <span class=\'rep_bonus bonus_negative\'>-100%</span><br />防御 触发陷阱 <span class=\'rep_bonus bonus_negative\'>-100%</span><br />防御 心理攻击 <span class=\'rep_bonus bonus_positive\'>+25%</span><br />智力 <span class=\'rep_bonus bonus_positive\'>+6<span class=\'rep_decimal\'>.00</span></span>')">冥想<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></a>给</td><td>自身</td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_3_1_0_3"><td class="rep_initiative">&nbsp;</td>
+<td><a href="#" onclick="return jump('h',111264)" class="rep_hero" x="111264">先祖之怒</a>
+使用<a href="#" onclick="return o('s','%E7%86%8A%E4%B9%8B%E6%84%A4%E6%80%92');" onmouseover="wodToolTip(this,'伤害 粉碎伤害 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+8<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+8<span class=\'rep_decimal\'>.80</span></span> (近战)<br />伤害 切割伤害 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+8<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+8<span class=\'rep_decimal\'>.80</span></span> (近战)<br />行动次数 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.00</span></span><br />伤害 穿刺伤害 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+8<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+8<span class=\'rep_decimal\'>.80</span></span> (近战)<br />防御 近战 <span class=\'rep_bonus bonus_negative\'>-10%</span><br />防御 远程 <span class=\'rep_bonus bonus_negative\'>-10%</span><br />防御 魔法 <span class=\'rep_bonus bonus_negative\'>-10%</span><br />力量 <span class=\'rep_bonus bonus_positive\'>+6<span class=\'rep_decimal\'>.80</span></span><br />敏捷 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>')">熊之愤怒<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></a> (<span class="rep_mana_cost">14 法力</span>/<a href="#" onclick="return o('i','%E7%86%8A%E5%A4%B4%E9%A5%B0');" onmouseover="return wodToolTip(this,'这是<b>团队物品</b>.');" class="report  rep_uni item_unique rep_group item_group_item">熊头饰<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></a>)给</td><td>自身</td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_3_1_0_4"><td class="rep_initiative">&nbsp;</td>
+<td><a href="#" onclick="return jump('h',112891)" class="rep_hero" x="112891">后天</a>
+使用<a href="#" onclick="return o('s','%E8%99%9A%E6%8B%9B');" onmouseover="wodToolTip(this,'攻击 远程 <span class=\'rep_bonus bonus_positive\'>+17<span class=\'rep_decimal\'>.00</span></span>')">虚招<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></a> (<span class="rep_mana_cost">1 法力</span>)给</td><td>自身</td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_3_1_0_5"><td class="rep_initiative">&nbsp;</td>
+<td><a href="#" onclick="return jump('h',114035)" class="rep_hero" x="114035">小麦</a>
+使用<a href="#" onclick="return o('s','%E6%B3%95%E5%8A%9B%E5%A2%9E%E6%95%88%E8%AF%95%E5%89%82');" onmouseover="wodToolTip(this,'法力回复 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.78</span></span> (法力)')">法力增效试剂<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></a> (<span class="rep_mana_cost">12 法力</span>)给</td><td><a href="#" onclick="return jump('h',114022)" class="rep_hero" x="114022">来一发</a>
+<br><a href="#" onclick="return jump('h',111149)" class="rep_hero" x="111149">亚庇特·神眷者</a>
+<br><a href="#" onclick="return jump('h',112891)" class="rep_hero" x="112891">后天</a>
+<br><a href="#" onclick="return jump('h',111293)" class="rep_hero" x="111293">暴风.铁锤</a>
+<br>自身<br><a href="#" onclick="return jump('h',111373)" class="rep_myhero">床前明月光</a>
+</td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_3_1_0_6"><td class="rep_initiative">&nbsp;</td>
+<td><a href="#" onclick="return jump('h',111293)" class="rep_hero" x="111293">暴风.铁锤</a>
+使用<a href="#" onclick="return o('s','%E8%99%9A%E6%8B%9B');" onmouseover="wodToolTip(this,'攻击 远程 <span class=\'rep_bonus bonus_positive\'>+16<span class=\'rep_decimal\'>.50</span></span>')">虚招<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></a> (<span class="rep_mana_cost">1 法力</span>)给</td><td>自身</td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_3_1_0_7"><td class="rep_initiative">&nbsp;</td>
+<td><a href="#" onclick="return jump('h',114022)" class="rep_hero" x="114022">来一发</a>
+使用<a href="#" onclick="return o('s','%E8%8B%A6%E4%BF%AE');" onmouseover="wodToolTip(this,'行动次数 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span> <span class=\'rep_bonus bonus_negative\'>-100%</span><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.50</span></span> (法力)<br />技能 大吃一顿 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span><br />技能 豪饮 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span><br />法力 <span class=\'rep_bonus bonus_positive\'>+13<span class=\'rep_decimal\'>.50</span></span> (法力)')">苦修<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></a>给</td><td>自身</td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_3_1_0_8"><td class="rep_initiative">&nbsp;</td>
+<td><a href="#" onclick="return jump('h',117882)" class="rep_hero" x="117882">慢慢</a>
+使用<a href="#" onclick="return o('s','%E5%85%A5%E7%A5%9E%E4%B9%8B%E8%88%9E');" onmouseover="wodToolTip(this,'防御 魔法 <span class=\'rep_bonus bonus_positive\'>+6<span class=\'rep_decimal\'>.00</span></span><br />防御 心理攻击 <span class=\'rep_bonus bonus_positive\'>+6<span class=\'rep_decimal\'>.00</span></span><br />防御 自然灾害 <span class=\'rep_bonus bonus_positive\'>+6<span class=\'rep_decimal\'>.00</span></span>')">入神之舞<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></a> (<span class="rep_mana_cost">3 法力</span>/<a href="#" onclick="return o('i','%E8%93%9D%E8%89%B2%E4%B8%9D%E7%BB%B8%E8%82%A9%E5%B8%A6');" onmouseover="return wodToolTip(this,'法力回复 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.72</span></span> (法力)<hr />这是<b>团队物品</b>.');" class="report  rep_uni item_unique rep_group item_group_item">蓝色丝绸肩带<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></a>)给</td><td>自身</td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_3_1_0_9"><td class="rep_initiative">&nbsp;</td>
+<td><a href="#" onclick="return jump('h',111373)" class="rep_myhero">床前明月光</a>
+使用<a href="#" onclick="return o('s','%E8%8B%A6%E4%BF%AE');" onmouseover="wodToolTip(this,'行动次数 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span> <span class=\'rep_bonus bonus_negative\'>-100%</span><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.00</span></span> (法力)<br />技能 大吃一顿 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span><br />技能 豪饮 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span><br />法力 <span class=\'rep_bonus bonus_positive\'>+9<span class=\'rep_decimal\'>.00</span></span> (法力)')">苦修<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></a>给</td><td>自身</td></tr>
+<tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',111091)" class="rep_hero" x="111091">后排人呢</a>
+ 恢复<span class="rep_gain">13</span>法力.</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',111078)" class="rep_hero" x="111078">wowo2107</a>
+ 失去<span class="rep_loss">2</span>HP，恢复<span class="rep_gain">83</span>法力.</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',111149)" class="rep_hero" x="111149">亚庇特·神眷者</a>
+ 恢复<span class="rep_gain">14</span>法力.</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><span onmouseover="wodToolTip(this,'属于<b>先祖之怒</b>.')"><a href="#" class="rep_hero" onclick="return o('n','%E9%A9%AC%E5%A5%87%E7%89%B9%E7%8C%AB%E5%A4%B4%E9%B9%B0%EF%BC%88%E7%BB%B4%E6%8A%A4%E8%80%85%EF%BC%89');">马奇特猫头鹰（维护者）</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+: <a href="#" onclick="return jump('h',111264)" class="rep_hero" x="111264">先祖之怒</a>
+ 失去<span class="rep_loss">2</span>法力.<br><a href="#" onclick="return jump('h',111264)" class="rep_hero" x="111264">先祖之怒</a>
+ 法力太低，<br><span onmouseover="wodToolTip(this,'属于<b>先祖之怒</b>.')"><a href="#" class="rep_hero" onclick="return o('n','%E9%A9%AC%E5%A5%87%E7%89%B9%E7%8C%AB%E5%A4%B4%E9%B9%B0%EF%BC%88%E7%BB%B4%E6%8A%A4%E8%80%85%EF%BC%89');">马奇特猫头鹰（维护者）</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+ 消失了!</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',111264)" class="rep_hero" x="111264">先祖之怒</a>
+ 恢复<span class="rep_gain">19</span>法力.</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',112891)" class="rep_hero" x="112891">后天</a>
+ 恢复<span class="rep_gain">19</span>法力.</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',114035)" class="rep_hero" x="114035">小麦</a>
+ 恢复<span class="rep_gain">12</span>法力.</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',111373)" class="rep_myhero">床前明月光</a>
+ 恢复<span class="rep_gain">35</span>法力.</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',111293)" class="rep_hero" x="111293">暴风.铁锤</a>
+ 恢复<span class="rep_gain">6</span>法力.</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',114022)" class="rep_hero" x="114022">来一发</a>
+ 恢复<span class="rep_gain">39</span>法力.</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',110896)" class="rep_hero" x="110896">xl</a>
+ 恢复<span class="rep_gain">11</span>法力.</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',117882)" class="rep_hero" x="117882">慢慢</a>
+ 恢复<span class="rep_gain">24</span>法力.</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',111264)" class="rep_hero" x="111264">先祖之怒</a>
+使用<a href="#" onclick="return o('s','%E7%8B%82%E7%83%AD');">狂热</a> (<span class="rep_mana_cost">3 法力</span>): 先攻80</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',112891)" class="rep_hero" x="112891">后天</a>
+使用<a href="#" onclick="return o('s','%E6%9C%BA%E8%AD%A6');">机警</a> (<span class="rep_mana_cost">3 法力</span>): 先攻74</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',111293)" class="rep_hero" x="111293">暴风.铁锤</a>
+使用<a href="#" onclick="return o('s','%E6%9C%BA%E8%AD%A6');">机警</a> (<span class="rep_mana_cost">4 法力</span>): 先攻65</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr><td>&nbsp;</td><td colspan="2"><a href="#" onclick="return jump('h',117882)" class="rep_hero" x="117882">慢慢</a>
+使用<a href="#" onclick="return o('s','%E8%BD%BB%E7%9B%88%E6%AD%A5%E4%BC%90');">轻盈步伐</a> (<span class="rep_mana_cost">2 法力</span>): 先攻95</td></tr><tr><td colspan="3"><hr></td></tr>
+<tr id="activeRow_3_1_0_10"><td class="rep_initiative">先攻95<br><span class="rep_action">第1步行动 / 共3步</span></td>
+<td colspan="2"><a href="#" onclick="return jump('h',117882)" class="rep_hero" x="117882">慢慢</a>
+ 不能执行任何动作。</td></tr><tr><td colspan="3"><hr></td></tr></tbody></table>
+<hr>
+<p class="rep_status_headline">进攻者:</p>
+
+<table class="rep_status_table">
+<tbody><tr>
+<th></th>
+<th>名称</th>
+<th>等级</th>
+<th>位置</th>
+<th>体力</th>
+<th class="resource">Resource</th>
+<th>状态</th>
+</tr>
+<tr>
+<td class="number">1</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>一小把药草:</b><br />力量 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />体质 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />智力 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />灵巧 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />魅力 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />敏捷 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />感知 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />意志 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />先攻 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />体力回复 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.60</span></span> (法力)<br /><br /><b>圣武士光环:</b><br />护甲 毒素伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />护甲 穿刺伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />护甲 闪电伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />护甲 寒冰伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />护甲 火焰伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />护甲 酸性伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />护甲 心灵伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />体力回复 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.25</span></span><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span> (法力)<br />护甲 粉碎伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />护甲 切割伤害 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span>/<span class=\'rep_bonus bonus_neutral\'>+0</span><br />伤害 神圣伤害 <span class=\'rep_bonus bonus_neutral\'>+0</span>/<span class=\'rep_bonus bonus_positive\'>+0<span class=\'rep_decimal\'>.90</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.80</span></span> (近战)')"><a href="#" onclick="return jump('h',111091)" class="rep_hero" x="111091">后排人呢</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>18</td>
+<td class="position">前排</td>
+<td>134</td>
+<td class="resource">65 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">2</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>苦修:</b><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span> (法力)<br />技能 大吃一顿 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span><br />技能 豪饮 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span><br />法力 <span class=\'rep_bonus bonus_positive\'>+12<span class=\'rep_decimal\'>.00</span></span> (法力)')"><a href="#" onclick="return jump('h',111078)" class="rep_hero" x="111078">wowo2107</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>18</td>
+<td class="position">中间</td>
+<td>26</td>
+<td class="resource">162 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">3</td>
+<td class="hero"><a href="#" onclick="return jump('h',111149)" class="rep_hero" x="111149">亚庇特·神眷者</a>
+</td>
+<td>18</td>
+<td class="position">中间</td>
+<td>74</td>
+<td class="resource">38 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">4</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>红花瓣（小盆）:</b><br />先攻 <span class=\'rep_bonus bonus_positive\'>+8<span class=\'rep_decimal\'>.84</span></span><br />敏捷 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.20</span></span><br /><br /><b>苦修:</b><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.00</span></span> (法力)<br />技能 大吃一顿 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span><br />技能 豪饮 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span><br />法力 <span class=\'rep_bonus bonus_positive\'>+9<span class=\'rep_decimal\'>.00</span></span> (法力)')"><a href="#" onclick="return jump('h',111264)" class="rep_hero" x="111264">先祖之怒</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>18</td>
+<td class="position">中间</td>
+<td>74</td>
+<td class="resource">16 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">5</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>红花瓣（小盆）:</b><br />先攻 <span class=\'rep_bonus bonus_positive\'>+8<span class=\'rep_decimal\'>.84</span></span><br />敏捷 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.20</span></span><br /><br /><b>心灵护盾:</b><br />法力回复 <span class=\'rep_bonus bonus_negative\'>-1<span class=\'rep_decimal\'>.00</span></span> (法力)<br />护甲 粉碎伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 切割伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 穿刺伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 酸性伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 毒素伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 闪电伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 火焰伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 寒冰伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 心灵伤害 <span class=\'rep_bonus bonus_positive\'>+7<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />意志 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.20</span></span><br />防御 魔法 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.00</span></span><br />护甲 奥术伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 黑暗伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br /><br /><b>永恒的星光:</b><br />防御 魔法 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.56</span></span><br />智力 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.40</span></span> (法力)<br />感知 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>')"><a href="#" onclick="return jump('h',112891)" class="rep_hero" x="112891">后天</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>18</td>
+<td class="position">中间</td>
+<td>40</td>
+<td class="resource">48 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">6</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>心灵护盾:</b><br />法力回复 <span class=\'rep_bonus bonus_negative\'>-1<span class=\'rep_decimal\'>.00</span></span> (法力)<br />护甲 粉碎伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 切割伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 穿刺伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 酸性伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 毒素伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 闪电伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 火焰伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 寒冰伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 心灵伤害 <span class=\'rep_bonus bonus_positive\'>+7<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />意志 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.20</span></span><br />防御 魔法 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.00</span></span><br />护甲 奥术伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 黑暗伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br /><br /><b>永恒的星光:</b><br />防御 魔法 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.56</span></span><br />智力 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.40</span></span> (法力)<br />感知 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>')"><a href="#" onclick="return jump('h',114035)" class="rep_hero" x="114035">小麦</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>17</td>
+<td class="position">中间</td>
+<td>44</td>
+<td class="resource">107 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">7</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>红花瓣（小盆）:</b><br />先攻 <span class=\'rep_bonus bonus_positive\'>+8<span class=\'rep_decimal\'>.84</span></span><br />敏捷 <span class=\'rep_bonus bonus_positive\'>+5<span class=\'rep_decimal\'>.20</span></span><br /><br /><b>苦修:</b><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.00</span></span> (法力)<br />技能 大吃一顿 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span><br />技能 豪饮 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span><br />法力 <span class=\'rep_bonus bonus_positive\'>+9<span class=\'rep_decimal\'>.00</span></span> (法力)')"><a href="#" onclick="return jump('h',111373)" class="rep_myhero">床前明月光</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>18</td>
+<td class="position">中间</td>
+<td>31</td>
+<td class="resource">113 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">8</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>心灵护盾:</b><br />法力回复 <span class=\'rep_bonus bonus_negative\'>-1<span class=\'rep_decimal\'>.00</span></span> (法力)<br />护甲 粉碎伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 切割伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 穿刺伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 酸性伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 毒素伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 闪电伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 火焰伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 寒冰伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 心灵伤害 <span class=\'rep_bonus bonus_positive\'>+7<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />意志 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.20</span></span><br />防御 魔法 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.00</span></span><br />护甲 奥术伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br />护甲 黑暗伤害 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.00</span></span>/<span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>/<span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.00</span></span><br /><br /><b>永恒的星光:</b><br />防御 魔法 <span class=\'rep_bonus bonus_positive\'>+1<span class=\'rep_decimal\'>.56</span></span><br />智力 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+3<span class=\'rep_decimal\'>.40</span></span> (法力)<br />感知 <span class=\'rep_bonus bonus_positive\'>+2<span class=\'rep_decimal\'>.20</span></span>')"><a href="#" onclick="return jump('h',111293)" class="rep_hero" x="111293">暴风.铁锤</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>17</td>
+<td class="position">中间</td>
+<td>72</td>
+<td class="resource">45 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">9</td>
+<td class="hero"><span onmouseover="wodToolTip(this,'<b>苦修:</b><br />法力回复 <span class=\'rep_bonus bonus_positive\'>+4<span class=\'rep_decimal\'>.50</span></span> (法力)<br />技能 大吃一顿 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span><br />技能 豪饮 <span class=\'rep_bonus bonus_negative\'>-999<span class=\'rep_decimal\'>.00</span></span><br />法力 <span class=\'rep_bonus bonus_positive\'>+13<span class=\'rep_decimal\'>.50</span></span> (法力)')"><a href="#" onclick="return jump('h',114022)" class="rep_hero" x="114022">来一发</a><img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/inf.gif" alt="" border="0"></span>
+</td>
+<td>18</td>
+<td class="position">中间</td>
+<td>32</td>
+<td class="resource">123 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">10</td>
+<td class="hero"><a href="#" onclick="return jump('h',110896)" class="rep_hero" x="110896">xl</a>
+</td>
+<td>18</td>
+<td class="position">后排</td>
+<td>179</td>
+<td class="resource">16 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+<tr>
+<td class="number">11</td>
+<td class="hero"><a href="#" onclick="return jump('h',117882)" class="rep_hero" x="117882">慢慢</a>
+</td>
+<td>18</td>
+<td class="position">后排</td>
+<td>56</td>
+<td class="resource">28 <span class="rep_resource">法力</span>
+</td>
+<td class="rep_wounds_none">毫发无伤</td></tr>
+</tbody></table>
+
+<hr>
+<p class="rep_status_headline">防御者:</p>
+
+<table class="rep_status_table">
+<tbody><tr>
+<th></th>
+<th>名称</th>
+<th>等级</th>
+<th>位置</th>
+<th>体力</th>
+<th class="resource">Resource</th>
+<th>状态</th>
+</tr>
+<tr><td></td><td colspan="6"><i>没有可交战的对手</i></td></tr>
+</tbody></table>
+
+<p class="rep_room_end">进攻者胜利了！</p>
+<hr><p class="rep_level_success">你收集好药剂。</p>
+<hr>
+<!-- WINNER MSG PLACEHOLDER -->
+<div class="rewards points"><a href="#" onclick="return jump('h',111091)" class="rep_hero" x="111091">后排人呢</a>
+ 得到30<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/lang/cn/ep.gif" alt="经验点" title="经验点" border="0"></div>
+<div class="rewards points"><a href="#" onclick="return jump('h',111078)" class="rep_hero" x="111078">wowo2107</a>
+ 得到30<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/lang/cn/ep.gif" alt="经验点" title="经验点" border="0"></div>
+<div class="rewards points"><a href="#" onclick="return jump('h',111149)" class="rep_hero" x="111149">亚庇特·神眷者</a>
+ 得到30<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/lang/cn/ep.gif" alt="经验点" title="经验点" border="0"></div>
+<div class="rewards points"><a href="#" onclick="return jump('h',111264)" class="rep_hero" x="111264">先祖之怒</a>
+ 得到30<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/lang/cn/ep.gif" alt="经验点" title="经验点" border="0"></div>
+<div class="rewards points"><a href="#" onclick="return jump('h',112891)" class="rep_hero" x="112891">后天</a>
+ 得到30<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/lang/cn/ep.gif" alt="经验点" title="经验点" border="0"></div>
+<div class="rewards points"><a href="#" onclick="return jump('h',114035)" class="rep_hero" x="114035">小麦</a>
+ 得到30<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/lang/cn/ep.gif" alt="经验点" title="经验点" border="0"></div>
+<div class="rewards points"><a href="#" onclick="return jump('h',111373)" class="rep_myhero">床前明月光</a>
+ 得到30<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/lang/cn/ep.gif" alt="经验点" title="经验点" border="0"></div>
+<div class="rewards points"><a href="#" onclick="return jump('h',111293)" class="rep_hero" x="111293">暴风.铁锤</a>
+ 得到30<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/lang/cn/ep.gif" alt="经验点" title="经验点" border="0"></div>
+<div class="rewards points"><a href="#" onclick="return jump('h',114022)" class="rep_hero" x="114022">来一发</a>
+ 得到30<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/lang/cn/ep.gif" alt="经验点" title="经验点" border="0"></div>
+<div class="rewards points"><a href="#" onclick="return jump('h',110896)" class="rep_hero" x="110896">xl</a>
+ 得到30<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/lang/cn/ep.gif" alt="经验点" title="经验点" border="0"></div>
+<div class="rewards points"><a href="#" onclick="return jump('h',117882)" class="rep_hero" x="117882">慢慢</a>
+ 得到30<img src="http://canto.world-of-dungeons.org/wod/css//skins/skin-4/images/icons/lang/cn/ep.gif" alt="经验点" title="经验点" border="0"></div>
+
+
+<p class="navigation in_report">
+         <a href="#1">=返回=</a>             =下一步=
+        &nbsp;
+</p>
+
+
+<p class="navigation levels">
+<i><a name="1">层  3</a>
+    </i>
+ &nbsp;&nbsp;
+ 
+  <input onclick="document.location.href='level1.html';" name="level[1]" value="层  1" class="button clickable" type="button"> <input onclick="document.location.href='level2.html';" name="level[2]" value="层  2" class="button clickable" type="button"> <input name="disabled" value="层  3" class="button_disabled" type="button"> <input onclick="document.location.href='level4.html';" name="level[4]" value="层  4" class="button clickable" type="button"> <input onclick="document.location.href='level5.html';" name="level[5]" value="层  5" class="button clickable" type="button"> <input onclick="document.location.href='level6.html';" name="level[6]" value="层  6" class="button clickable" type="button"> <input onclick="document.location.href='level7.html';" name="level[7]" value="层  7" class="button clickable" type="button"> <input onclick="document.location.href='level8.html';" name="level[8]" value="层  8" class="button clickable" type="button"></p>
+
+
+ </td>
+ </tr>
+</tbody></table>
+
+    
+        
+ 
+<a name="end"></a>
+<p>
+ <input onclick="document.location.href='../../indexAll.html';" name="overview" value="摘要" class="button clickable" type="button"> <input onclick="document.location.href='statistics.html';" name="stats[0]" value="统计表" class="button clickable" type="button"> <input onclick="document.location.href='items.html';" name="items[0]" value="获得物品" class="button clickable" type="button"> <input name="disabled" value="详细资料" class="button_disabled" type="button"></p>
+
+
+</div>          </form>
+</body>
+</html>
