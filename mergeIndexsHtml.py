@@ -1,8 +1,9 @@
-#coding=utf-8
+# coding=utf-8
+#-*- coding: UTF-8 -*-
 #!/usr/bin/python
 
 from HTMLParser import HTMLParser
-import os
+import os,sys
 import re
 import datetime
 import time
@@ -89,7 +90,8 @@ def writeToHtml(tagStrList):
     suffixEnd = "\n</tbody></table></body></html>"
 
     fileToWrite = open(INDEX_ALL, 'w')
-    fileToWrite.write(suffixBegin + suffixMiddle+ finalStr + suffixEnd)
+    content = suffixBegin + suffixMiddle+ finalStr.decode("unicode-escape") + suffixEnd;
+    fileToWrite.write(content)
     fileToWrite.close()
     return
 
@@ -105,6 +107,10 @@ def tagStrsKeyForSort(tagStr):
     return
 
 # 主流程
+reload(sys)
+sys.setdefaultencoding('utf-8') 
+
+printHello()
 
 ## 修改相对链接
 editDetailHtmlLinkRelations(".")
