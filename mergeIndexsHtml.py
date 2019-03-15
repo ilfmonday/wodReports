@@ -97,12 +97,15 @@ def writeToHtml(tagStrList):
 
 # 5 排序key方法
 def tagStrsKeyForSort(tagStr):
-    matchObj = re.search( r"[0-9]*年[0-9]*月[0-9]*日 [0-9]*:[0-9]*", tagStr, 0)
+    matchObj = re.search( r'<span>.*[0-9]*:[0-9]*</span>', tagStr, 0)
     if matchObj:
         resultStr = matchObj.group()
-        resultDate = datetime.datetime.strptime(resultStr, '%Y年%m月%d日 %H:%M')
+        resultStr = resultStr.replace('<span>','')
+        resultStr = resultStr.replace('</span>', '')
+        resultDate = datetime.datetime.strptime(resultStr.decode('unicode-escape'), '%Y年%m月%d日 %H:%M')
         return resultDate
     else:
+        print "INVALID_SORT_KEY"
         return 0.0
     return
 
